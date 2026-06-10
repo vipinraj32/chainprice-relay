@@ -113,6 +113,8 @@ If you need the actual block number, deploy `contracts/ChainlinkBlockResolver.so
 ```
 targetBlock ≈ currentBlock - round((currentTimestamp - updatedAt) / 12)
 ```
+<img width="1892" height="690" alt="image" src="https://github.com/user-attachments/assets/bab11b69-d75c-4656-a082-37dc1c93eb7f" />
+
 
 ---
 
