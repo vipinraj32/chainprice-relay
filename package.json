@@ -1,0 +1,27 @@
+{
+  "name": "cre-price-snapshot",
+  "version": "1.0.0",
+  "description": "CRE workflow: read Chainlink price feed on Sepolia and write on-chain",
+  "private": true,
+  "scripts": {
+    "compile":  "hardhat compile",
+    "deploy":   "hardhat run scripts/deploy.ts --network sepolia",
+    "verify":   "hardhat verify --network sepolia",
+    "test":     "hardhat test",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "hardhat":                          "^2.22.0",
+    "typescript":                       "^5.4.0",
+    "ts-node":                          "^10.9.2",
+    "dotenv":                           "^16.4.5"
+  },
+  "dependencies": {
+    "@chainlink/cre-sdk": "^1.0.0",
+    "ethers":             "^6.11.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

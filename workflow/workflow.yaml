@@ -1,0 +1,45 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# CRE Workflow Manifest
+# my-workflow/workflow.yaml
+# ─────────────────────────────────────────────────────────────────────────────
+specVersion: "1.0"
+
+name: price-snapshot
+version: "1.0.0"
+description: |
+  Reads a Chainlink Data Feed price for a given token on Sepolia (EVM Read)
+  and writes the result to PriceSnapshot.sol on-chain (EVM Write).
+  Triggered by an HTTP POST to /snapshot with body { "token": "ETH" }.
+
+# ── Triggers ──────────────────────────────────────────────────────────────────
+triggers:
+  - type: http
+    config:
+      method: POST
+      path: /snapshot
+
+# ── Networks ──────────────────────────────────────────────────────────────────
+networks:
+  - id: sepolia
+    chainId: 11155111
+
+# ── Secrets ───────────────────────────────────────────────────────────────────
+# Actual values must be provided in secrets.yaml (see secrets.yaml.example).
+secrets:
+  - name: CONTRACT_ADDRESS
+    description: "Deployed PriceSnapshot contract address on Sepolia"
+
+# ── Capabilities ──────────────────────────────────────────────────────────────
+capabilities:
+  evmRead:
+    enabled: true
+    networks:
+      - sepolia
+  evmWrite:
+    enabled: true
+    networks:
+      - sepolia
+    signingKeyRef: SIGNING_KEY   # resolved from secrets.yaml
+
+# ── Entry point ───────────────────────────────────────────────────────────────
+entrypoint: price-snapshot.ts
