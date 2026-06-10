@@ -467,28 +467,28 @@ var init_sha2 = __esm(() => {
   sha256 = /* @__PURE__ */ createHasher(() => new SHA256);
 });
 var HMAC;
-var hmac = (hash, key, message) => new HMAC(hash, key).update(message).digest();
+var hmac = (hash2, key, message) => new HMAC(hash2, key).update(message).digest();
 var init_hmac = __esm(() => {
   init_utils();
   HMAC = class HMAC2 extends Hash {
-    constructor(hash, _key) {
+    constructor(hash2, _key) {
       super();
       this.finished = false;
       this.destroyed = false;
-      ahash(hash);
+      ahash(hash2);
       const key = toBytes2(_key);
-      this.iHash = hash.create();
+      this.iHash = hash2.create();
       if (typeof this.iHash.update !== "function")
         throw new Error("Expected instance of class which extends utils.Hash");
       this.blockLen = this.iHash.blockLen;
       this.outputLen = this.iHash.outputLen;
       const blockLen = this.blockLen;
       const pad2 = new Uint8Array(blockLen);
-      pad2.set(key.length > blockLen ? hash.create().update(key).digest() : key);
+      pad2.set(key.length > blockLen ? hash2.create().update(key).digest() : key);
       for (let i = 0;i < pad2.length; i++)
         pad2[i] ^= 54;
       this.iHash.update(pad2);
-      this.oHash = hash.create();
+      this.oHash = hash2.create();
       for (let i = 0;i < pad2.length; i++)
         pad2[i] ^= 54 ^ 92;
       this.oHash.update(pad2);
@@ -534,7 +534,7 @@ var init_hmac = __esm(() => {
       this.iHash.destroy();
     }
   };
-  hmac.create = (hash, key) => new HMAC(hash, key);
+  hmac.create = (hash2, key) => new HMAC(hash2, key);
 });
 function _abool2(value, title = "") {
   if (typeof value !== "boolean") {
@@ -1943,8 +1943,8 @@ function ecdh(Point, ecdhOpts = {}) {
   };
   return Object.freeze({ getPublicKey, getSharedSecret, keygen, Point, utils, lengths });
 }
-function ecdsa(Point, hash, ecdsaOpts = {}) {
-  ahash(hash);
+function ecdsa(Point, hash2, ecdsaOpts = {}) {
+  ahash(hash2);
   _validateObject(ecdsaOpts, {}, {
     hmac: "function",
     lowS: "boolean",
@@ -1953,7 +1953,7 @@ function ecdsa(Point, hash, ecdsaOpts = {}) {
     bits2int_modN: "function"
   });
   const randomBytes2 = ecdsaOpts.randomBytes || randomBytes;
-  const hmac2 = ecdsaOpts.hmac || ((key, ...msgs) => hmac(hash, key, concatBytes(...msgs)));
+  const hmac2 = ecdsaOpts.hmac || ((key, ...msgs) => hmac(hash2, key, concatBytes(...msgs)));
   const { Fp, Fn } = Point;
   const { ORDER: CURVE_ORDER, BITS: fnBits } = Fn;
   const { keygen, getPublicKey, getSharedSecret, utils, lengths } = ecdh(Point, ecdsaOpts);
@@ -2093,7 +2093,7 @@ function ecdsa(Point, hash, ecdsaOpts = {}) {
   }
   function validateMsgAndHash(message, prehash) {
     _abytes2(message, undefined, "message");
-    return prehash ? _abytes2(hash(message), undefined, "prehashed message") : message;
+    return prehash ? _abytes2(hash2(message), undefined, "prehashed message") : message;
   }
   function prepSig(message, privateKey, opts) {
     if (["recovered", "canonical"].some((k) => (k in opts)))
@@ -2134,7 +2134,7 @@ function ecdsa(Point, hash, ecdsaOpts = {}) {
   function sign(message, secretKey, opts = {}) {
     message = ensureBytes("message", message);
     const { seed, k2sig } = prepSig(message, secretKey, opts);
-    const drbg = createHmacDrbg(hash.outputLen, Fn.BYTES, hmac2);
+    const drbg = createHmacDrbg(hash2.outputLen, Fn.BYTES, hmac2);
     const sig = drbg(seed, k2sig);
     return sig;
   }
@@ -2208,7 +2208,7 @@ function ecdsa(Point, hash, ecdsaOpts = {}) {
     verify,
     recoverPublicKey,
     Signature,
-    hash
+    hash: hash2
   });
 }
 function _weierstrass_legacy_opts_to_new(c) {
@@ -2259,9 +2259,9 @@ function _ecdsa_new_output_to_legacy(c, _ecdsa) {
   });
 }
 function weierstrass(c) {
-  const { CURVE, curveOpts, hash, ecdsaOpts } = _ecdsa_legacy_opts_to_new(c);
+  const { CURVE, curveOpts, hash: hash2, ecdsaOpts } = _ecdsa_legacy_opts_to_new(c);
   const Point = weierstrassN(CURVE, curveOpts);
-  const signs = ecdsa(Point, hash, ecdsaOpts);
+  const signs = ecdsa(Point, hash2, ecdsaOpts);
   return _ecdsa_new_output_to_legacy(c, signs);
 }
 var divNearest = (num, den) => (num + (num >= 0 ? den : -den) / _2n3) / den;
@@ -2384,7 +2384,7 @@ var init_weierstrass = __esm(() => {
   _4n2 = BigInt(4);
 });
 function createCurve(curveDef, defHash) {
-  const create3 = (hash) => weierstrass({ ...curveDef, hash });
+  const create3 = (hash2) => weierstrass({ ...curveDef, hash: hash2 });
   return { ...create3(defHash), create: create3 };
 }
 var init__shortw_utils = __esm(() => {
@@ -2461,7 +2461,7 @@ function hash_to_field(msg, count, options) {
     k: "number",
     hash: "function"
   });
-  const { p, k, m, hash, expand, DST } = options;
+  const { p, k, m, hash: hash2, expand, DST } = options;
   if (!isHash(options.hash))
     throw new Error("expected valid hash");
   abytes(msg);
@@ -2471,9 +2471,9 @@ function hash_to_field(msg, count, options) {
   const len_in_bytes = count * m * L;
   let prb;
   if (expand === "xmd") {
-    prb = expand_message_xmd(msg, DST, len_in_bytes, hash);
+    prb = expand_message_xmd(msg, DST, len_in_bytes, hash2);
   } else if (expand === "xof") {
-    prb = expand_message_xof(msg, DST, len_in_bytes, k, hash);
+    prb = expand_message_xof(msg, DST, len_in_bytes, k, hash2);
   } else if (expand === "_internal_pass") {
     prb = msg;
   } else {
@@ -6590,6 +6590,26 @@ var Mode;
   Mode2[Mode2["NODE"] = 2] = "NODE";
 })(Mode || (Mode = {}));
 var file_tools_generator_v1alpha_cre_metadata = /* @__PURE__ */ fileDesc("Cip0b29scy9nZW5lcmF0b3IvdjFhbHBoYS9jcmVfbWV0YWRhdGEucHJvdG8SF3Rvb2xzLmdlbmVyYXRvci52MWFscGhhIoQBCgtTdHJpbmdMYWJlbBJECghkZWZhdWx0cxgBIAMoCzIyLnRvb2xzLmdlbmVyYXRvci52MWFscGhhLlN0cmluZ0xhYmVsLkRlZmF1bHRzRW50cnkaLwoNRGVmYXVsdHNFbnRyeRILCgNrZXkYASABKAkSDQoFdmFsdWUYAiABKAk6AjgBIogBCgtVaW50NjRMYWJlbBJECghkZWZhdWx0cxgBIAMoCzIyLnRvb2xzLmdlbmVyYXRvci52MWFscGhhLlVpbnQ2NExhYmVsLkRlZmF1bHRzRW50cnkaMwoNRGVmYXVsdHNFbnRyeRILCgNrZXkYASABKAkSEQoFdmFsdWUYAiABKARCAjAAOgI4ASKEAQoLVWludDMyTGFiZWwSRAoIZGVmYXVsdHMYASADKAsyMi50b29scy5nZW5lcmF0b3IudjFhbHBoYS5VaW50MzJMYWJlbC5EZWZhdWx0c0VudHJ5Gi8KDURlZmF1bHRzRW50cnkSCwoDa2V5GAEgASgJEg0KBXZhbHVlGAIgASgNOgI4ASKGAQoKSW50NjRMYWJlbBJDCghkZWZhdWx0cxgBIAMoCzIxLnRvb2xzLmdlbmVyYXRvci52MWFscGhhLkludDY0TGFiZWwuRGVmYXVsdHNFbnRyeRozCg1EZWZhdWx0c0VudHJ5EgsKA2tleRgBIAEoCRIRCgV2YWx1ZRgCIAEoA0ICMAA6AjgBIoIBCgpJbnQzMkxhYmVsEkMKCGRlZmF1bHRzGAEgAygLMjEudG9vbHMuZ2VuZXJhdG9yLnYxYWxwaGEuSW50MzJMYWJlbC5EZWZhdWx0c0VudHJ5Gi8KDURlZmF1bHRzRW50cnkSCwoDa2V5GAEgASgJEg0KBXZhbHVlGAIgASgFOgI4ASLBAgoFTGFiZWwSPAoMc3RyaW5nX2xhYmVsGAEgASgLMiQudG9vbHMuZ2VuZXJhdG9yLnYxYWxwaGEuU3RyaW5nTGFiZWxIABI8Cgx1aW50NjRfbGFiZWwYAiABKAsyJC50b29scy5nZW5lcmF0b3IudjFhbHBoYS5VaW50NjRMYWJlbEgAEjoKC2ludDY0X2xhYmVsGAMgASgLMiMudG9vbHMuZ2VuZXJhdG9yLnYxYWxwaGEuSW50NjRMYWJlbEgAEjwKDHVpbnQzMl9sYWJlbBgEIAEoCzIkLnRvb2xzLmdlbmVyYXRvci52MWFscGhhLlVpbnQzMkxhYmVsSAASOgoLaW50MzJfbGFiZWwYBSABKAsyIy50b29scy5nZW5lcmF0b3IudjFhbHBoYS5JbnQzMkxhYmVsSABCBgoEa2luZCLkAQoSQ2FwYWJpbGl0eU1ldGFkYXRhEh8KBG1vZGUYASABKA4yES5zZGsudjFhbHBoYS5Nb2RlEhUKDWNhcGFiaWxpdHlfaWQYAiABKAkSRwoGbGFiZWxzGAMgAygLMjcudG9vbHMuZ2VuZXJhdG9yLnYxYWxwaGEuQ2FwYWJpbGl0eU1ldGFkYXRhLkxhYmVsc0VudHJ5Gk0KC0xhYmVsc0VudHJ5EgsKA2tleRgBIAEoCRItCgV2YWx1ZRgCIAEoCzIeLnRvb2xzLmdlbmVyYXRvci52MWFscGhhLkxhYmVsOgI4ASI2ChhDYXBhYmlsaXR5TWV0aG9kTWV0YWRhdGESGgoSbWFwX3RvX3VudHlwZWRfYXBpGAEgASgIOm4KCmNhcGFiaWxpdHkSHy5nb29nbGUucHJvdG9idWYuU2VydmljZU9wdGlvbnMY0IYDIAEoCzIrLnRvb2xzLmdlbmVyYXRvci52MWFscGhhLkNhcGFiaWxpdHlNZXRhZGF0YVIKY2FwYWJpbGl0eTprCgZtZXRob2QSHi5nb29nbGUucHJvdG9idWYuTWV0aG9kT3B0aW9ucxjRhgMgASgLMjEudG9vbHMuZ2VuZXJhdG9yLnYxYWxwaGEuQ2FwYWJpbGl0eU1ldGhvZE1ldGFkYXRhUgZtZXRob2RCrwEKG2NvbS50b29scy5nZW5lcmF0b3IudjFhbHBoYUIQQ3JlTWV0YWRhdGFQcm90b1ABogIDVEdYqgIXVG9vbHMuR2VuZXJhdG9yLlYxYWxwaGHKAhhUb29sc1xHZW5lcmF0b3JfXFYxYWxwaGHiAiRUb29sc1xHZW5lcmF0b3JfXFYxYWxwaGFcR1BCTWV0YWRhdGHqAhlUb29sczo6R2VuZXJhdG9yOjpWMWFscGhhYgZwcm90bzM", [file_google_protobuf_descriptor, file_sdk_v1alpha_sdk]);
+var file_capabilities_blockchain_evm_v1alpha_client = /* @__PURE__ */ fileDesc("CjBjYXBhYmlsaXRpZXMvYmxvY2tjaGFpbi9ldm0vdjFhbHBoYS9jbGllbnQucHJvdG8SI2NhcGFiaWxpdGllcy5ibG9ja2NoYWluLmV2bS52MWFscGhhIh0KC1RvcGljVmFsdWVzEg4KBnZhbHVlcxgBIAMoDCK4AQoXRmlsdGVyTG9nVHJpZ2dlclJlcXVlc3QSEQoJYWRkcmVzc2VzGAEgAygMEkAKBnRvcGljcxgCIAMoCzIwLmNhcGFiaWxpdGllcy5ibG9ja2NoYWluLmV2bS52MWFscGhhLlRvcGljVmFsdWVzEkgKCmNvbmZpZGVuY2UYAyABKA4yNC5jYXBhYmlsaXRpZXMuYmxvY2tjaGFpbi5ldm0udjFhbHBoYS5Db25maWRlbmNlTGV2ZWwiegoTQ2FsbENvbnRyYWN0UmVxdWVzdBI6CgRjYWxsGAEgASgLMiwuY2FwYWJpbGl0aWVzLmJsb2NrY2hhaW4uZXZtLnYxYWxwaGEuQ2FsbE1zZxInCgxibG9ja19udW1iZXIYAiABKAsyES52YWx1ZXMudjEuQmlnSW50IiEKEUNhbGxDb250cmFjdFJlcGx5EgwKBGRhdGEYASABKAwiWwoRRmlsdGVyTG9nc1JlcXVlc3QSRgoMZmlsdGVyX3F1ZXJ5GAEgASgLMjAuY2FwYWJpbGl0aWVzLmJsb2NrY2hhaW4uZXZtLnYxYWxwaGEuRmlsdGVyUXVlcnkiSQoPRmlsdGVyTG9nc1JlcGx5EjYKBGxvZ3MYASADKAsyKC5jYXBhYmlsaXRpZXMuYmxvY2tjaGFpbi5ldm0udjFhbHBoYS5Mb2cixwEKA0xvZxIPCgdhZGRyZXNzGAEgASgMEg4KBnRvcGljcxgCIAMoDBIPCgd0eF9oYXNoGAMgASgMEhIKCmJsb2NrX2hhc2gYBCABKAwSDAoEZGF0YRgFIAEoDBIRCglldmVudF9zaWcYBiABKAwSJwoMYmxvY2tfbnVtYmVyGAcgASgLMhEudmFsdWVzLnYxLkJpZ0ludBIQCgh0eF9pbmRleBgIIAEoDRINCgVpbmRleBgJIAEoDRIPCgdyZW1vdmVkGAogASgIIjEKB0NhbGxNc2cSDAoEZnJvbRgBIAEoDBIKCgJ0bxgCIAEoDBIMCgRkYXRhGAMgASgMIr0BCgtGaWx0ZXJRdWVyeRISCgpibG9ja19oYXNoGAEgASgMEiUKCmZyb21fYmxvY2sYAiABKAsyES52YWx1ZXMudjEuQmlnSW50EiMKCHRvX2Jsb2NrGAMgASgLMhEudmFsdWVzLnYxLkJpZ0ludBIRCglhZGRyZXNzZXMYBCADKAwSOwoGdG9waWNzGAUgAygLMisuY2FwYWJpbGl0aWVzLmJsb2NrY2hhaW4uZXZtLnYxYWxwaGEuVG9waWNzIhcKBlRvcGljcxINCgV0b3BpYxgBIAMoDCJMChBCYWxhbmNlQXRSZXF1ZXN0Eg8KB2FjY291bnQYASABKAwSJwoMYmxvY2tfbnVtYmVyGAIgASgLMhEudmFsdWVzLnYxLkJpZ0ludCI0Cg5CYWxhbmNlQXRSZXBseRIiCgdiYWxhbmNlGAEgASgLMhEudmFsdWVzLnYxLkJpZ0ludCJPChJFc3RpbWF0ZUdhc1JlcXVlc3QSOQoDbXNnGAEgASgLMiwuY2FwYWJpbGl0aWVzLmJsb2NrY2hhaW4uZXZtLnYxYWxwaGEuQ2FsbE1zZyIjChBFc3RpbWF0ZUdhc1JlcGx5Eg8KA2dhcxgBIAEoBEICMAAiKwobR2V0VHJhbnNhY3Rpb25CeUhhc2hSZXF1ZXN0EgwKBGhhc2gYASABKAwiYgoZR2V0VHJhbnNhY3Rpb25CeUhhc2hSZXBseRJFCgt0cmFuc2FjdGlvbhgBIAEoCzIwLmNhcGFiaWxpdGllcy5ibG9ja2NoYWluLmV2bS52MWFscGhhLlRyYW5zYWN0aW9uIqEBCgtUcmFuc2FjdGlvbhIRCgVub25jZRgBIAEoBEICMAASDwoDZ2FzGAIgASgEQgIwABIKCgJ0bxgDIAEoDBIMCgRkYXRhGAQgASgMEgwKBGhhc2gYBSABKAwSIAoFdmFsdWUYBiABKAsyES52YWx1ZXMudjEuQmlnSW50EiQKCWdhc19wcmljZRgHIAEoCzIRLnZhbHVlcy52MS5CaWdJbnQiLAocR2V0VHJhbnNhY3Rpb25SZWNlaXB0UmVxdWVzdBIMCgRoYXNoGAEgASgMIlsKGkdldFRyYW5zYWN0aW9uUmVjZWlwdFJlcGx5Ej0KB3JlY2VpcHQYASABKAsyLC5jYXBhYmlsaXRpZXMuYmxvY2tjaGFpbi5ldm0udjFhbHBoYS5SZWNlaXB0IpkCCgdSZWNlaXB0EhIKBnN0YXR1cxgBIAEoBEICMAASFAoIZ2FzX3VzZWQYAiABKARCAjAAEhQKCHR4X2luZGV4GAMgASgEQgIwABISCgpibG9ja19oYXNoGAQgASgMEjYKBGxvZ3MYBiADKAsyKC5jYXBhYmlsaXRpZXMuYmxvY2tjaGFpbi5ldm0udjFhbHBoYS5Mb2cSDwoHdHhfaGFzaBgHIAEoDBIuChNlZmZlY3RpdmVfZ2FzX3ByaWNlGAggASgLMhEudmFsdWVzLnYxLkJpZ0ludBInCgxibG9ja19udW1iZXIYCSABKAsyES52YWx1ZXMudjEuQmlnSW50EhgKEGNvbnRyYWN0X2FkZHJlc3MYCiABKAwiQAoVSGVhZGVyQnlOdW1iZXJSZXF1ZXN0EicKDGJsb2NrX251bWJlchgBIAEoCzIRLnZhbHVlcy52MS5CaWdJbnQiUgoTSGVhZGVyQnlOdW1iZXJSZXBseRI7CgZoZWFkZXIYASABKAsyKy5jYXBhYmlsaXRpZXMuYmxvY2tjaGFpbi5ldm0udjFhbHBoYS5IZWFkZXIiawoGSGVhZGVyEhUKCXRpbWVzdGFtcBgBIAEoBEICMAASJwoMYmxvY2tfbnVtYmVyGAIgASgLMhEudmFsdWVzLnYxLkJpZ0ludBIMCgRoYXNoGAMgASgMEhMKC3BhcmVudF9oYXNoGAQgASgMIqsBChJXcml0ZVJlcG9ydFJlcXVlc3QSEAoIcmVjZWl2ZXIYASABKAwSKwoGcmVwb3J0GAIgASgLMhsuc2RrLnYxYWxwaGEuUmVwb3J0UmVzcG9uc2USRwoKZ2FzX2NvbmZpZxgDIAEoCzIuLmNhcGFiaWxpdGllcy5ibG9ja2NoYWluLmV2bS52MWFscGhhLkdhc0NvbmZpZ0gAiAEBQg0KC19nYXNfY29uZmlnIiIKCUdhc0NvbmZpZxIVCglnYXNfbGltaXQYASABKARCAjAAIocDChBXcml0ZVJlcG9ydFJlcGx5EkAKCXR4X3N0YXR1cxgBIAEoDjItLmNhcGFiaWxpdGllcy5ibG9ja2NoYWluLmV2bS52MWFscGhhLlR4U3RhdHVzEnUKInJlY2VpdmVyX2NvbnRyYWN0X2V4ZWN1dGlvbl9zdGF0dXMYAiABKA4yRC5jYXBhYmlsaXRpZXMuYmxvY2tjaGFpbi5ldm0udjFhbHBoYS5SZWNlaXZlckNvbnRyYWN0RXhlY3V0aW9uU3RhdHVzSACIAQESFAoHdHhfaGFzaBgDIAEoDEgBiAEBEi8KD3RyYW5zYWN0aW9uX2ZlZRgEIAEoCzIRLnZhbHVlcy52MS5CaWdJbnRIAogBARIaCg1lcnJvcl9tZXNzYWdlGAUgASgJSAOIAQFCJQojX3JlY2VpdmVyX2NvbnRyYWN0X2V4ZWN1dGlvbl9zdGF0dXNCCgoIX3R4X2hhc2hCEgoQX3RyYW5zYWN0aW9uX2ZlZUIQCg5fZXJyb3JfbWVzc2FnZSppCg9Db25maWRlbmNlTGV2ZWwSGQoVQ09ORklERU5DRV9MRVZFTF9TQUZFEAASGwoXQ09ORklERU5DRV9MRVZFTF9MQVRFU1QQARIeChpDT05GSURFTkNFX0xFVkVMX0ZJTkFMSVpFRBACKoIBCh9SZWNlaXZlckNvbnRyYWN0RXhlY3V0aW9uU3RhdHVzEi4KKlJFQ0VJVkVSX0NPTlRSQUNUX0VYRUNVVElPTl9TVEFUVVNfU1VDQ0VTUxAAEi8KK1JFQ0VJVkVSX0NPTlRSQUNUX0VYRUNVVElPTl9TVEFUVVNfUkVWRVJURUQQASpOCghUeFN0YXR1cxITCg9UWF9TVEFUVVNfRkFUQUwQABIWChJUWF9TVEFUVVNfUkVWRVJURUQQARIVChFUWF9TVEFUVVNfU1VDQ0VTUxACMoUYCgZDbGllbnQSgAEKDENhbGxDb250cmFjdBI4LmNhcGFiaWxpdGllcy5ibG9ja2NoYWluLmV2bS52MWFscGhhLkNhbGxDb250cmFjdFJlcXVlc3QaNi5jYXBhYmlsaXRpZXMuYmxvY2tjaGFpbi5ldm0udjFhbHBoYS5DYWxsQ29udHJhY3RSZXBseRJ6CgpGaWx0ZXJMb2dzEjYuY2FwYWJpbGl0aWVzLmJsb2NrY2hhaW4uZXZtLnYxYWxwaGEuRmlsdGVyTG9nc1JlcXVlc3QaNC5jYXBhYmlsaXRpZXMuYmxvY2tjaGFpbi5ldm0udjFhbHBoYS5GaWx0ZXJMb2dzUmVwbHkSdwoJQmFsYW5jZUF0EjUuY2FwYWJpbGl0aWVzLmJsb2NrY2hhaW4uZXZtLnYxYWxwaGEuQmFsYW5jZUF0UmVxdWVzdBozLmNhcGFiaWxpdGllcy5ibG9ja2NoYWluLmV2bS52MWFscGhhLkJhbGFuY2VBdFJlcGx5En0KC0VzdGltYXRlR2FzEjcuY2FwYWJpbGl0aWVzLmJsb2NrY2hhaW4uZXZtLnYxYWxwaGEuRXN0aW1hdGVHYXNSZXF1ZXN0GjUuY2FwYWJpbGl0aWVzLmJsb2NrY2hhaW4uZXZtLnYxYWxwaGEuRXN0aW1hdGVHYXNSZXBseRKYAQoUR2V0VHJhbnNhY3Rpb25CeUhhc2gSQC5jYXBhYmlsaXRpZXMuYmxvY2tjaGFpbi5ldm0udjFhbHBoYS5HZXRUcmFuc2FjdGlvbkJ5SGFzaFJlcXVlc3QaPi5jYXBhYmlsaXRpZXMuYmxvY2tjaGFpbi5ldm0udjFhbHBoYS5HZXRUcmFuc2FjdGlvbkJ5SGFzaFJlcGx5EpsBChVHZXRUcmFuc2FjdGlvblJlY2VpcHQSQS5jYXBhYmlsaXRpZXMuYmxvY2tjaGFpbi5ldm0udjFhbHBoYS5HZXRUcmFuc2FjdGlvblJlY2VpcHRSZXF1ZXN0Gj8uY2FwYWJpbGl0aWVzLmJsb2NrY2hhaW4uZXZtLnYxYWxwaGEuR2V0VHJhbnNhY3Rpb25SZWNlaXB0UmVwbHkShgEKDkhlYWRlckJ5TnVtYmVyEjouY2FwYWJpbGl0aWVzLmJsb2NrY2hhaW4uZXZtLnYxYWxwaGEuSGVhZGVyQnlOdW1iZXJSZXF1ZXN0GjguY2FwYWJpbGl0aWVzLmJsb2NrY2hhaW4uZXZtLnYxYWxwaGEuSGVhZGVyQnlOdW1iZXJSZXBseRJ2CgpMb2dUcmlnZ2VyEjwuY2FwYWJpbGl0aWVzLmJsb2NrY2hhaW4uZXZtLnYxYWxwaGEuRmlsdGVyTG9nVHJpZ2dlclJlcXVlc3QaKC5jYXBhYmlsaXRpZXMuYmxvY2tjaGFpbi5ldm0udjFhbHBoYS5Mb2cwARJ9CgtXcml0ZVJlcG9ydBI3LmNhcGFiaWxpdGllcy5ibG9ja2NoYWluLmV2bS52MWFscGhhLldyaXRlUmVwb3J0UmVxdWVzdBo1LmNhcGFiaWxpdGllcy5ibG9ja2NoYWluLmV2bS52MWFscGhhLldyaXRlUmVwb3J0UmVwbHkayg6CtRjFDggBEglldm1AMS4wLjAatQ4KDUNoYWluU2VsZWN0b3ISow4SoA4KJAoXYXBlY2hhaW4tdGVzdG5ldC1jdXJ0aXMQwcO0+I3EkrKJAQoXCgthcmMtdGVzdG5ldBDnxoye19fQjSoKHQoRYXZhbGFuY2hlLW1haW5uZXQQ1eeKwOHVmKRZCiMKFmF2YWxhbmNoZS10ZXN0bmV0LWZ1amkQm/n8kKLjqPjMAQooChtiaW5hbmNlX3NtYXJ0X2NoYWluLW1haW5uZXQQz/eU8djtlbidAQooChtiaW5hbmNlX3NtYXJ0X2NoYWluLXRlc3RuZXQQ+62+nICu5Iq4AQoYCgxjZWxvLW1haW5uZXQQhtTo2IaTiNcSChoKDmNyb25vcy10ZXN0bmV0EP3Z7q3g3trIKQoiChVkdGNjLXRlc3RuZXQtYW5kZXNpdGUQ0oPj0JmW5aTXAQocChBldGhlcmV1bS1tYWlubmV0EJX28eTPsqbCRQonChtldGhlcmV1bS1tYWlubmV0LWFyYml0cnVtLTEQxOiNzY6boddECiQKF2V0aGVyZXVtLW1haW5uZXQtYmFzZS0xEIL/q6L+uZDT3QEKIgoWZXRoZXJldW0tbWFpbm5ldC1pbmstMRCgsKbpt+aqhDAKJAoYZXRoZXJldW0tbWFpbm5ldC1saW5lYS0xELa66ZjLvbCbQAolChlldGhlcmV1bS1tYWlubmV0LW1hbnRsZS0xEIrntJXnsIPMFQonChtldGhlcmV1bS1tYWlubmV0LW9wdGltaXNtLTEQuJWPw/f+0OkzCiYKGWV0aGVyZXVtLW1haW5uZXQtc2Nyb2xsLTEQuLzk68S+yJ+3AQopCh1ldGhlcmV1bS1tYWlubmV0LXdvcmxkY2hhaW4tMRCH77q3xbbCuBwKJQoZZXRoZXJldW0tbWFpbm5ldC14bGF5ZXItMRCWpfycpqjv7SkKJQoZZXRoZXJldW0tbWFpbm5ldC16a3N5bmMtMRCU7pfZ7bSx1xUKJQoYZXRoZXJldW0tdGVzdG5ldC1zZXBvbGlhENm15M78ye6g3gEKLwojZXRoZXJldW0tdGVzdG5ldC1zZXBvbGlhLWFyYml0cnVtLTEQ6s7u/+q2hKMwCiwKH2V0aGVyZXVtLXRlc3RuZXQtc2Vwb2xpYS1iYXNlLTEQuMq57/aQrsiPAQosCiBldGhlcmV1bS10ZXN0bmV0LXNlcG9saWEtbGluZWEtMRDrqtT+gvnmr08KLQohZXRoZXJldW0tdGVzdG5ldC1zZXBvbGlhLW1hbnRsZS0xENXGuO7N9vKmcgovCiNldGhlcmV1bS10ZXN0bmV0LXNlcG9saWEtb3B0aW1pc20tMRCfhsWhvtjDwEgKLQohZXRoZXJldW0tdGVzdG5ldC1zZXBvbGlhLXNjcm9sbC0xEIvptL7buu3RHwowCiNldGhlcmV1bS10ZXN0bmV0LXNlcG9saWEtdW5pY2hhaW4tMRC03v7g7JeplsQBCjEKJWV0aGVyZXVtLXRlc3RuZXQtc2Vwb2xpYS13b3JsZGNoYWluLTEQut/gxcep88VJCi0KIWV0aGVyZXVtLXRlc3RuZXQtc2Vwb2xpYS16a3N5bmMtMRC3wfz98sSA3l8KIAoUZ25vc2lzX2NoYWluLW1haW5uZXQQ9JKt2vKirroGCicKG2dub3Npc19jaGFpbi10ZXN0bmV0LWNoaWFkbxCzsYLQm6WPj3sKHwoTaHlwZXJsaXF1aWQtbWFpbm5ldBCns/jdztHp8iEKHwoTaHlwZXJsaXF1aWQtdGVzdG5ldBCIzt3Il+DJvTsKIAoTaW5rLXRlc3RuZXQtc2Vwb2xpYRDo9Kel8+aWwIcBChkKDWpvdmF5LW1haW5uZXQQtcPEmqGA35IVChkKDWpvdmF5LXRlc3RuZXQQ5M+KhN6y3o4NChsKD21lZ2FldGgtbWFpbm5ldBDqlbbIvOSmyFQKHgoRbWVnYWV0aC10ZXN0bmV0LTIQ443eiLGP/ZP9AQokChdwaGFyb3MtYXRsYW50aWMtdGVzdG5ldBDMme3gzryvtN8BChoKDnBoYXJvcy1tYWlubmV0EMjBh571782hbAobCg5wbGFzbWEtbWFpbm5ldBD4m/HR2snVxoEBChoKDnBsYXNtYS10ZXN0bmV0ENWbv6XDtJmHNwobCg9wb2x5Z29uLW1haW5uZXQQsavk8JqShp04CiEKFHBvbHlnb24tdGVzdG5ldC1hbW95EM2P1t/xx5D64QEKJAoYcHJpdmF0ZS10ZXN0bmV0LWFuZGVzaXRlENSmmKXBj9z8XwoZCg1zb25pYy1tYWlubmV0ENGy5e3ZoLKdFwoZCg1zb25pYy10ZXN0bmV0EMiI+9S0xvq8GAoYCgt0YWMtdGVzdG5ldBDV243j+5+T14MBChsKDnhsYXllci10ZXN0bmV0EMm+obStzLzdjQFC5QEKJ2NvbS5jYXBhYmlsaXRpZXMuYmxvY2tjaGFpbi5ldm0udjFhbHBoYUILQ2xpZW50UHJvdG9QAaICA0NCRaoCI0NhcGFiaWxpdGllcy5CbG9ja2NoYWluLkV2bS5WMWFscGhhygIjQ2FwYWJpbGl0aWVzXEJsb2NrY2hhaW5cRXZtXFYxYWxwaGHiAi9DYXBhYmlsaXRpZXNcQmxvY2tjaGFpblxFdm1cVjFhbHBoYVxHUEJNZXRhZGF0YeoCJkNhcGFiaWxpdGllczo6QmxvY2tjaGFpbjo6RXZtOjpWMWFscGhhYgZwcm90bzM", [file_sdk_v1alpha_sdk, file_tools_generator_v1alpha_cre_metadata, file_values_v1_values]);
+var FilterLogTriggerRequestSchema = /* @__PURE__ */ messageDesc(file_capabilities_blockchain_evm_v1alpha_client, 1);
+var CallContractRequestSchema = /* @__PURE__ */ messageDesc(file_capabilities_blockchain_evm_v1alpha_client, 2);
+var CallContractReplySchema = /* @__PURE__ */ messageDesc(file_capabilities_blockchain_evm_v1alpha_client, 3);
+var FilterLogsRequestSchema = /* @__PURE__ */ messageDesc(file_capabilities_blockchain_evm_v1alpha_client, 4);
+var FilterLogsReplySchema = /* @__PURE__ */ messageDesc(file_capabilities_blockchain_evm_v1alpha_client, 5);
+var LogSchema = /* @__PURE__ */ messageDesc(file_capabilities_blockchain_evm_v1alpha_client, 6);
+var BalanceAtRequestSchema = /* @__PURE__ */ messageDesc(file_capabilities_blockchain_evm_v1alpha_client, 10);
+var BalanceAtReplySchema = /* @__PURE__ */ messageDesc(file_capabilities_blockchain_evm_v1alpha_client, 11);
+var EstimateGasRequestSchema = /* @__PURE__ */ messageDesc(file_capabilities_blockchain_evm_v1alpha_client, 12);
+var EstimateGasReplySchema = /* @__PURE__ */ messageDesc(file_capabilities_blockchain_evm_v1alpha_client, 13);
+var GetTransactionByHashRequestSchema = /* @__PURE__ */ messageDesc(file_capabilities_blockchain_evm_v1alpha_client, 14);
+var GetTransactionByHashReplySchema = /* @__PURE__ */ messageDesc(file_capabilities_blockchain_evm_v1alpha_client, 15);
+var GetTransactionReceiptRequestSchema = /* @__PURE__ */ messageDesc(file_capabilities_blockchain_evm_v1alpha_client, 17);
+var GetTransactionReceiptReplySchema = /* @__PURE__ */ messageDesc(file_capabilities_blockchain_evm_v1alpha_client, 18);
+var HeaderByNumberRequestSchema = /* @__PURE__ */ messageDesc(file_capabilities_blockchain_evm_v1alpha_client, 20);
+var HeaderByNumberReplySchema = /* @__PURE__ */ messageDesc(file_capabilities_blockchain_evm_v1alpha_client, 21);
+var WriteReportRequestSchema = /* @__PURE__ */ messageDesc(file_capabilities_blockchain_evm_v1alpha_client, 23);
+var GasConfigSchema = /* @__PURE__ */ messageDesc(file_capabilities_blockchain_evm_v1alpha_client, 24);
+var WriteReportReplySchema = /* @__PURE__ */ messageDesc(file_capabilities_blockchain_evm_v1alpha_client, 25);
 var ConfidenceLevel;
 (function(ConfidenceLevel2) {
   ConfidenceLevel2[ConfidenceLevel2["SAFE"] = 0] = "SAFE";
@@ -6607,23 +6627,788 @@ var TxStatus;
   TxStatus2[TxStatus2["REVERTED"] = 1] = "REVERTED";
   TxStatus2[TxStatus2["SUCCESS"] = 2] = "SUCCESS";
 })(TxStatus || (TxStatus = {}));
-var version = "2.34.0";
-var errorConfig = {
-  getDocsUrl: ({ docsBaseUrl, docsPath = "", docsSlug }) => docsPath ? `${docsBaseUrl ?? "https://viem.sh"}${docsPath}${docsSlug ? `#${docsSlug}` : ""}` : undefined,
-  version: `viem@${version}`
-};
+function execTyped(regex, string) {
+  const match = regex.exec(string);
+  return match?.groups;
+}
+var bytesRegex = /^bytes([1-9]|1[0-9]|2[0-9]|3[0-2])?$/;
+var integerRegex = /^u?int(8|16|24|32|40|48|56|64|72|80|88|96|104|112|120|128|136|144|152|160|168|176|184|192|200|208|216|224|232|240|248|256)?$/;
+var isTupleRegex = /^\(.+?\).*?$/;
+var tupleRegex = /^tuple(?<array>(\[(\d*)\])*)$/;
+function formatAbiParameter(abiParameter) {
+  let type = abiParameter.type;
+  if (tupleRegex.test(abiParameter.type) && "components" in abiParameter) {
+    type = "(";
+    const length = abiParameter.components.length;
+    for (let i = 0;i < length; i++) {
+      const component = abiParameter.components[i];
+      type += formatAbiParameter(component);
+      if (i < length - 1)
+        type += ", ";
+    }
+    const result = execTyped(tupleRegex, abiParameter.type);
+    type += `)${result?.array ?? ""}`;
+    return formatAbiParameter({
+      ...abiParameter,
+      type
+    });
+  }
+  if ("indexed" in abiParameter && abiParameter.indexed)
+    type = `${type} indexed`;
+  if (abiParameter.name)
+    return `${type} ${abiParameter.name}`;
+  return type;
+}
+function formatAbiParameters(abiParameters) {
+  let params = "";
+  const length = abiParameters.length;
+  for (let i = 0;i < length; i++) {
+    const abiParameter = abiParameters[i];
+    params += formatAbiParameter(abiParameter);
+    if (i !== length - 1)
+      params += ", ";
+  }
+  return params;
+}
+function formatAbiItem(abiItem) {
+  if (abiItem.type === "function")
+    return `function ${abiItem.name}(${formatAbiParameters(abiItem.inputs)})${abiItem.stateMutability && abiItem.stateMutability !== "nonpayable" ? ` ${abiItem.stateMutability}` : ""}${abiItem.outputs?.length ? ` returns (${formatAbiParameters(abiItem.outputs)})` : ""}`;
+  if (abiItem.type === "event")
+    return `event ${abiItem.name}(${formatAbiParameters(abiItem.inputs)})`;
+  if (abiItem.type === "error")
+    return `error ${abiItem.name}(${formatAbiParameters(abiItem.inputs)})`;
+  if (abiItem.type === "constructor")
+    return `constructor(${formatAbiParameters(abiItem.inputs)})${abiItem.stateMutability === "payable" ? " payable" : ""}`;
+  if (abiItem.type === "fallback")
+    return `fallback() external${abiItem.stateMutability === "payable" ? " payable" : ""}`;
+  return "receive() external payable";
+}
+var errorSignatureRegex = /^error (?<name>[a-zA-Z$_][a-zA-Z0-9$_]*)\((?<parameters>.*?)\)$/;
+function isErrorSignature(signature) {
+  return errorSignatureRegex.test(signature);
+}
+function execErrorSignature(signature) {
+  return execTyped(errorSignatureRegex, signature);
+}
+var eventSignatureRegex = /^event (?<name>[a-zA-Z$_][a-zA-Z0-9$_]*)\((?<parameters>.*?)\)$/;
+function isEventSignature(signature) {
+  return eventSignatureRegex.test(signature);
+}
+function execEventSignature(signature) {
+  return execTyped(eventSignatureRegex, signature);
+}
+var functionSignatureRegex = /^function (?<name>[a-zA-Z$_][a-zA-Z0-9$_]*)\((?<parameters>.*?)\)(?: (?<scope>external|public{1}))?(?: (?<stateMutability>pure|view|nonpayable|payable{1}))?(?: returns\s?\((?<returns>.*?)\))?$/;
+function isFunctionSignature(signature) {
+  return functionSignatureRegex.test(signature);
+}
+function execFunctionSignature(signature) {
+  return execTyped(functionSignatureRegex, signature);
+}
+var structSignatureRegex = /^struct (?<name>[a-zA-Z$_][a-zA-Z0-9$_]*) \{(?<properties>.*?)\}$/;
+function isStructSignature(signature) {
+  return structSignatureRegex.test(signature);
+}
+function execStructSignature(signature) {
+  return execTyped(structSignatureRegex, signature);
+}
+var constructorSignatureRegex = /^constructor\((?<parameters>.*?)\)(?:\s(?<stateMutability>payable{1}))?$/;
+function isConstructorSignature(signature) {
+  return constructorSignatureRegex.test(signature);
+}
+function execConstructorSignature(signature) {
+  return execTyped(constructorSignatureRegex, signature);
+}
+var fallbackSignatureRegex = /^fallback\(\) external(?:\s(?<stateMutability>payable{1}))?$/;
+function isFallbackSignature(signature) {
+  return fallbackSignatureRegex.test(signature);
+}
+function execFallbackSignature(signature) {
+  return execTyped(fallbackSignatureRegex, signature);
+}
+var receiveSignatureRegex = /^receive\(\) external payable$/;
+function isReceiveSignature(signature) {
+  return receiveSignatureRegex.test(signature);
+}
+var modifiers = new Set([
+  "memory",
+  "indexed",
+  "storage",
+  "calldata"
+]);
+var eventModifiers = new Set(["indexed"]);
+var functionModifiers = new Set([
+  "calldata",
+  "memory",
+  "storage"
+]);
+var version = "1.0.8";
 
 class BaseError extends Error {
   constructor(shortMessage, args = {}) {
+    const details = args.cause instanceof BaseError ? args.cause.details : args.cause?.message ? args.cause.message : args.details;
+    const docsPath = args.cause instanceof BaseError ? args.cause.docsPath || args.docsPath : args.docsPath;
+    const message = [
+      shortMessage || "An error occurred.",
+      "",
+      ...args.metaMessages ? [...args.metaMessages, ""] : [],
+      ...docsPath ? [`Docs: https://abitype.dev${docsPath}`] : [],
+      ...details ? [`Details: ${details}`] : [],
+      `Version: abitype@${version}`
+    ].join(`
+`);
+    super(message);
+    Object.defineProperty(this, "details", {
+      enumerable: true,
+      configurable: true,
+      writable: true,
+      value: undefined
+    });
+    Object.defineProperty(this, "docsPath", {
+      enumerable: true,
+      configurable: true,
+      writable: true,
+      value: undefined
+    });
+    Object.defineProperty(this, "metaMessages", {
+      enumerable: true,
+      configurable: true,
+      writable: true,
+      value: undefined
+    });
+    Object.defineProperty(this, "shortMessage", {
+      enumerable: true,
+      configurable: true,
+      writable: true,
+      value: undefined
+    });
+    Object.defineProperty(this, "name", {
+      enumerable: true,
+      configurable: true,
+      writable: true,
+      value: "AbiTypeError"
+    });
+    if (args.cause)
+      this.cause = args.cause;
+    this.details = details;
+    this.docsPath = docsPath;
+    this.metaMessages = args.metaMessages;
+    this.shortMessage = shortMessage;
+  }
+}
+
+class UnknownTypeError extends BaseError {
+  constructor({ type }) {
+    super("Unknown type.", {
+      metaMessages: [
+        `Type "${type}" is not a valid ABI type. Perhaps you forgot to include a struct signature?`
+      ]
+    });
+    Object.defineProperty(this, "name", {
+      enumerable: true,
+      configurable: true,
+      writable: true,
+      value: "UnknownTypeError"
+    });
+  }
+}
+
+class UnknownSolidityTypeError extends BaseError {
+  constructor({ type }) {
+    super("Unknown type.", {
+      metaMessages: [`Type "${type}" is not a valid ABI type.`]
+    });
+    Object.defineProperty(this, "name", {
+      enumerable: true,
+      configurable: true,
+      writable: true,
+      value: "UnknownSolidityTypeError"
+    });
+  }
+}
+
+class InvalidAbiParametersError extends BaseError {
+  constructor({ params }) {
+    super("Failed to parse ABI parameters.", {
+      details: `parseAbiParameters(${JSON.stringify(params, null, 2)})`,
+      docsPath: "/api/human#parseabiparameters-1"
+    });
+    Object.defineProperty(this, "name", {
+      enumerable: true,
+      configurable: true,
+      writable: true,
+      value: "InvalidAbiParametersError"
+    });
+  }
+}
+
+class InvalidParameterError extends BaseError {
+  constructor({ param }) {
+    super("Invalid ABI parameter.", {
+      details: param
+    });
+    Object.defineProperty(this, "name", {
+      enumerable: true,
+      configurable: true,
+      writable: true,
+      value: "InvalidParameterError"
+    });
+  }
+}
+
+class SolidityProtectedKeywordError extends BaseError {
+  constructor({ param, name }) {
+    super("Invalid ABI parameter.", {
+      details: param,
+      metaMessages: [
+        `"${name}" is a protected Solidity keyword. More info: https://docs.soliditylang.org/en/latest/cheatsheet.html`
+      ]
+    });
+    Object.defineProperty(this, "name", {
+      enumerable: true,
+      configurable: true,
+      writable: true,
+      value: "SolidityProtectedKeywordError"
+    });
+  }
+}
+
+class InvalidModifierError extends BaseError {
+  constructor({ param, type, modifier }) {
+    super("Invalid ABI parameter.", {
+      details: param,
+      metaMessages: [
+        `Modifier "${modifier}" not allowed${type ? ` in "${type}" type` : ""}.`
+      ]
+    });
+    Object.defineProperty(this, "name", {
+      enumerable: true,
+      configurable: true,
+      writable: true,
+      value: "InvalidModifierError"
+    });
+  }
+}
+
+class InvalidFunctionModifierError extends BaseError {
+  constructor({ param, type, modifier }) {
+    super("Invalid ABI parameter.", {
+      details: param,
+      metaMessages: [
+        `Modifier "${modifier}" not allowed${type ? ` in "${type}" type` : ""}.`,
+        `Data location can only be specified for array, struct, or mapping types, but "${modifier}" was given.`
+      ]
+    });
+    Object.defineProperty(this, "name", {
+      enumerable: true,
+      configurable: true,
+      writable: true,
+      value: "InvalidFunctionModifierError"
+    });
+  }
+}
+
+class InvalidAbiTypeParameterError extends BaseError {
+  constructor({ abiParameter }) {
+    super("Invalid ABI parameter.", {
+      details: JSON.stringify(abiParameter, null, 2),
+      metaMessages: ["ABI parameter type is invalid."]
+    });
+    Object.defineProperty(this, "name", {
+      enumerable: true,
+      configurable: true,
+      writable: true,
+      value: "InvalidAbiTypeParameterError"
+    });
+  }
+}
+
+class InvalidSignatureError extends BaseError {
+  constructor({ signature, type }) {
+    super(`Invalid ${type} signature.`, {
+      details: signature
+    });
+    Object.defineProperty(this, "name", {
+      enumerable: true,
+      configurable: true,
+      writable: true,
+      value: "InvalidSignatureError"
+    });
+  }
+}
+
+class UnknownSignatureError extends BaseError {
+  constructor({ signature }) {
+    super("Unknown signature.", {
+      details: signature
+    });
+    Object.defineProperty(this, "name", {
+      enumerable: true,
+      configurable: true,
+      writable: true,
+      value: "UnknownSignatureError"
+    });
+  }
+}
+
+class InvalidStructSignatureError extends BaseError {
+  constructor({ signature }) {
+    super("Invalid struct signature.", {
+      details: signature,
+      metaMessages: ["No properties exist."]
+    });
+    Object.defineProperty(this, "name", {
+      enumerable: true,
+      configurable: true,
+      writable: true,
+      value: "InvalidStructSignatureError"
+    });
+  }
+}
+
+class CircularReferenceError extends BaseError {
+  constructor({ type }) {
+    super("Circular reference detected.", {
+      metaMessages: [`Struct "${type}" is a circular reference.`]
+    });
+    Object.defineProperty(this, "name", {
+      enumerable: true,
+      configurable: true,
+      writable: true,
+      value: "CircularReferenceError"
+    });
+  }
+}
+
+class InvalidParenthesisError extends BaseError {
+  constructor({ current, depth }) {
+    super("Unbalanced parentheses.", {
+      metaMessages: [
+        `"${current.trim()}" has too many ${depth > 0 ? "opening" : "closing"} parentheses.`
+      ],
+      details: `Depth "${depth}"`
+    });
+    Object.defineProperty(this, "name", {
+      enumerable: true,
+      configurable: true,
+      writable: true,
+      value: "InvalidParenthesisError"
+    });
+  }
+}
+function getParameterCacheKey(param, type, structs) {
+  let structKey = "";
+  if (structs)
+    for (const struct of Object.entries(structs)) {
+      if (!struct)
+        continue;
+      let propertyKey = "";
+      for (const property of struct[1]) {
+        propertyKey += `[${property.type}${property.name ? `:${property.name}` : ""}]`;
+      }
+      structKey += `(${struct[0]}{${propertyKey}})`;
+    }
+  if (type)
+    return `${type}:${param}${structKey}`;
+  return param;
+}
+var parameterCache = new Map([
+  ["address", { type: "address" }],
+  ["bool", { type: "bool" }],
+  ["bytes", { type: "bytes" }],
+  ["bytes32", { type: "bytes32" }],
+  ["int", { type: "int256" }],
+  ["int256", { type: "int256" }],
+  ["string", { type: "string" }],
+  ["uint", { type: "uint256" }],
+  ["uint8", { type: "uint8" }],
+  ["uint16", { type: "uint16" }],
+  ["uint24", { type: "uint24" }],
+  ["uint32", { type: "uint32" }],
+  ["uint64", { type: "uint64" }],
+  ["uint96", { type: "uint96" }],
+  ["uint112", { type: "uint112" }],
+  ["uint160", { type: "uint160" }],
+  ["uint192", { type: "uint192" }],
+  ["uint256", { type: "uint256" }],
+  ["address owner", { type: "address", name: "owner" }],
+  ["address to", { type: "address", name: "to" }],
+  ["bool approved", { type: "bool", name: "approved" }],
+  ["bytes _data", { type: "bytes", name: "_data" }],
+  ["bytes data", { type: "bytes", name: "data" }],
+  ["bytes signature", { type: "bytes", name: "signature" }],
+  ["bytes32 hash", { type: "bytes32", name: "hash" }],
+  ["bytes32 r", { type: "bytes32", name: "r" }],
+  ["bytes32 root", { type: "bytes32", name: "root" }],
+  ["bytes32 s", { type: "bytes32", name: "s" }],
+  ["string name", { type: "string", name: "name" }],
+  ["string symbol", { type: "string", name: "symbol" }],
+  ["string tokenURI", { type: "string", name: "tokenURI" }],
+  ["uint tokenId", { type: "uint256", name: "tokenId" }],
+  ["uint8 v", { type: "uint8", name: "v" }],
+  ["uint256 balance", { type: "uint256", name: "balance" }],
+  ["uint256 tokenId", { type: "uint256", name: "tokenId" }],
+  ["uint256 value", { type: "uint256", name: "value" }],
+  [
+    "event:address indexed from",
+    { type: "address", name: "from", indexed: true }
+  ],
+  ["event:address indexed to", { type: "address", name: "to", indexed: true }],
+  [
+    "event:uint indexed tokenId",
+    { type: "uint256", name: "tokenId", indexed: true }
+  ],
+  [
+    "event:uint256 indexed tokenId",
+    { type: "uint256", name: "tokenId", indexed: true }
+  ]
+]);
+function parseSignature(signature, structs = {}) {
+  if (isFunctionSignature(signature))
+    return parseFunctionSignature(signature, structs);
+  if (isEventSignature(signature))
+    return parseEventSignature(signature, structs);
+  if (isErrorSignature(signature))
+    return parseErrorSignature(signature, structs);
+  if (isConstructorSignature(signature))
+    return parseConstructorSignature(signature, structs);
+  if (isFallbackSignature(signature))
+    return parseFallbackSignature(signature);
+  if (isReceiveSignature(signature))
+    return {
+      type: "receive",
+      stateMutability: "payable"
+    };
+  throw new UnknownSignatureError({ signature });
+}
+function parseFunctionSignature(signature, structs = {}) {
+  const match = execFunctionSignature(signature);
+  if (!match)
+    throw new InvalidSignatureError({ signature, type: "function" });
+  const inputParams = splitParameters(match.parameters);
+  const inputs = [];
+  const inputLength = inputParams.length;
+  for (let i = 0;i < inputLength; i++) {
+    inputs.push(parseAbiParameter(inputParams[i], {
+      modifiers: functionModifiers,
+      structs,
+      type: "function"
+    }));
+  }
+  const outputs = [];
+  if (match.returns) {
+    const outputParams = splitParameters(match.returns);
+    const outputLength = outputParams.length;
+    for (let i = 0;i < outputLength; i++) {
+      outputs.push(parseAbiParameter(outputParams[i], {
+        modifiers: functionModifiers,
+        structs,
+        type: "function"
+      }));
+    }
+  }
+  return {
+    name: match.name,
+    type: "function",
+    stateMutability: match.stateMutability ?? "nonpayable",
+    inputs,
+    outputs
+  };
+}
+function parseEventSignature(signature, structs = {}) {
+  const match = execEventSignature(signature);
+  if (!match)
+    throw new InvalidSignatureError({ signature, type: "event" });
+  const params = splitParameters(match.parameters);
+  const abiParameters = [];
+  const length = params.length;
+  for (let i = 0;i < length; i++)
+    abiParameters.push(parseAbiParameter(params[i], {
+      modifiers: eventModifiers,
+      structs,
+      type: "event"
+    }));
+  return { name: match.name, type: "event", inputs: abiParameters };
+}
+function parseErrorSignature(signature, structs = {}) {
+  const match = execErrorSignature(signature);
+  if (!match)
+    throw new InvalidSignatureError({ signature, type: "error" });
+  const params = splitParameters(match.parameters);
+  const abiParameters = [];
+  const length = params.length;
+  for (let i = 0;i < length; i++)
+    abiParameters.push(parseAbiParameter(params[i], { structs, type: "error" }));
+  return { name: match.name, type: "error", inputs: abiParameters };
+}
+function parseConstructorSignature(signature, structs = {}) {
+  const match = execConstructorSignature(signature);
+  if (!match)
+    throw new InvalidSignatureError({ signature, type: "constructor" });
+  const params = splitParameters(match.parameters);
+  const abiParameters = [];
+  const length = params.length;
+  for (let i = 0;i < length; i++)
+    abiParameters.push(parseAbiParameter(params[i], { structs, type: "constructor" }));
+  return {
+    type: "constructor",
+    stateMutability: match.stateMutability ?? "nonpayable",
+    inputs: abiParameters
+  };
+}
+function parseFallbackSignature(signature) {
+  const match = execFallbackSignature(signature);
+  if (!match)
+    throw new InvalidSignatureError({ signature, type: "fallback" });
+  return {
+    type: "fallback",
+    stateMutability: match.stateMutability ?? "nonpayable"
+  };
+}
+var abiParameterWithoutTupleRegex = /^(?<type>[a-zA-Z$_][a-zA-Z0-9$_]*)(?<array>(?:\[\d*?\])+?)?(?:\s(?<modifier>calldata|indexed|memory|storage{1}))?(?:\s(?<name>[a-zA-Z$_][a-zA-Z0-9$_]*))?$/;
+var abiParameterWithTupleRegex = /^\((?<type>.+?)\)(?<array>(?:\[\d*?\])+?)?(?:\s(?<modifier>calldata|indexed|memory|storage{1}))?(?:\s(?<name>[a-zA-Z$_][a-zA-Z0-9$_]*))?$/;
+var dynamicIntegerRegex = /^u?int$/;
+function parseAbiParameter(param, options) {
+  const parameterCacheKey = getParameterCacheKey(param, options?.type, options?.structs);
+  if (parameterCache.has(parameterCacheKey))
+    return parameterCache.get(parameterCacheKey);
+  const isTuple = isTupleRegex.test(param);
+  const match = execTyped(isTuple ? abiParameterWithTupleRegex : abiParameterWithoutTupleRegex, param);
+  if (!match)
+    throw new InvalidParameterError({ param });
+  if (match.name && isSolidityKeyword(match.name))
+    throw new SolidityProtectedKeywordError({ param, name: match.name });
+  const name = match.name ? { name: match.name } : {};
+  const indexed = match.modifier === "indexed" ? { indexed: true } : {};
+  const structs = options?.structs ?? {};
+  let type;
+  let components = {};
+  if (isTuple) {
+    type = "tuple";
+    const params = splitParameters(match.type);
+    const components_ = [];
+    const length = params.length;
+    for (let i = 0;i < length; i++) {
+      components_.push(parseAbiParameter(params[i], { structs }));
+    }
+    components = { components: components_ };
+  } else if (match.type in structs) {
+    type = "tuple";
+    components = { components: structs[match.type] };
+  } else if (dynamicIntegerRegex.test(match.type)) {
+    type = `${match.type}256`;
+  } else {
+    type = match.type;
+    if (!(options?.type === "struct") && !isSolidityType(type))
+      throw new UnknownSolidityTypeError({ type });
+  }
+  if (match.modifier) {
+    if (!options?.modifiers?.has?.(match.modifier))
+      throw new InvalidModifierError({
+        param,
+        type: options?.type,
+        modifier: match.modifier
+      });
+    if (functionModifiers.has(match.modifier) && !isValidDataLocation(type, !!match.array))
+      throw new InvalidFunctionModifierError({
+        param,
+        type: options?.type,
+        modifier: match.modifier
+      });
+  }
+  const abiParameter = {
+    type: `${type}${match.array ?? ""}`,
+    ...name,
+    ...indexed,
+    ...components
+  };
+  parameterCache.set(parameterCacheKey, abiParameter);
+  return abiParameter;
+}
+function splitParameters(params, result = [], current = "", depth = 0) {
+  const length = params.trim().length;
+  for (let i = 0;i < length; i++) {
+    const char = params[i];
+    const tail = params.slice(i + 1);
+    switch (char) {
+      case ",":
+        return depth === 0 ? splitParameters(tail, [...result, current.trim()]) : splitParameters(tail, result, `${current}${char}`, depth);
+      case "(":
+        return splitParameters(tail, result, `${current}${char}`, depth + 1);
+      case ")":
+        return splitParameters(tail, result, `${current}${char}`, depth - 1);
+      default:
+        return splitParameters(tail, result, `${current}${char}`, depth);
+    }
+  }
+  if (current === "")
+    return result;
+  if (depth !== 0)
+    throw new InvalidParenthesisError({ current, depth });
+  result.push(current.trim());
+  return result;
+}
+function isSolidityType(type) {
+  return type === "address" || type === "bool" || type === "function" || type === "string" || bytesRegex.test(type) || integerRegex.test(type);
+}
+var protectedKeywordsRegex = /^(?:after|alias|anonymous|apply|auto|byte|calldata|case|catch|constant|copyof|default|defined|error|event|external|false|final|function|immutable|implements|in|indexed|inline|internal|let|mapping|match|memory|mutable|null|of|override|partial|private|promise|public|pure|reference|relocatable|return|returns|sizeof|static|storage|struct|super|supports|switch|this|true|try|typedef|typeof|var|view|virtual)$/;
+function isSolidityKeyword(name) {
+  return name === "address" || name === "bool" || name === "function" || name === "string" || name === "tuple" || bytesRegex.test(name) || integerRegex.test(name) || protectedKeywordsRegex.test(name);
+}
+function isValidDataLocation(type, isArray) {
+  return isArray || type === "bytes" || type === "string" || type === "tuple";
+}
+function parseStructs(signatures) {
+  const shallowStructs = {};
+  const signaturesLength = signatures.length;
+  for (let i = 0;i < signaturesLength; i++) {
+    const signature = signatures[i];
+    if (!isStructSignature(signature))
+      continue;
+    const match = execStructSignature(signature);
+    if (!match)
+      throw new InvalidSignatureError({ signature, type: "struct" });
+    const properties = match.properties.split(";");
+    const components = [];
+    const propertiesLength = properties.length;
+    for (let k = 0;k < propertiesLength; k++) {
+      const property = properties[k];
+      const trimmed = property.trim();
+      if (!trimmed)
+        continue;
+      const abiParameter = parseAbiParameter(trimmed, {
+        type: "struct"
+      });
+      components.push(abiParameter);
+    }
+    if (!components.length)
+      throw new InvalidStructSignatureError({ signature });
+    shallowStructs[match.name] = components;
+  }
+  const resolvedStructs = {};
+  const entries = Object.entries(shallowStructs);
+  const entriesLength = entries.length;
+  for (let i = 0;i < entriesLength; i++) {
+    const [name, parameters] = entries[i];
+    resolvedStructs[name] = resolveStructs(parameters, shallowStructs);
+  }
+  return resolvedStructs;
+}
+var typeWithoutTupleRegex = /^(?<type>[a-zA-Z$_][a-zA-Z0-9$_]*)(?<array>(?:\[\d*?\])+?)?$/;
+function resolveStructs(abiParameters, structs, ancestors = new Set) {
+  const components = [];
+  const length = abiParameters.length;
+  for (let i = 0;i < length; i++) {
+    const abiParameter = abiParameters[i];
+    const isTuple = isTupleRegex.test(abiParameter.type);
+    if (isTuple)
+      components.push(abiParameter);
+    else {
+      const match = execTyped(typeWithoutTupleRegex, abiParameter.type);
+      if (!match?.type)
+        throw new InvalidAbiTypeParameterError({ abiParameter });
+      const { array, type } = match;
+      if (type in structs) {
+        if (ancestors.has(type))
+          throw new CircularReferenceError({ type });
+        components.push({
+          ...abiParameter,
+          type: `tuple${array ?? ""}`,
+          components: resolveStructs(structs[type] ?? [], structs, new Set([...ancestors, type]))
+        });
+      } else {
+        if (isSolidityType(type))
+          components.push(abiParameter);
+        else
+          throw new UnknownTypeError({ type });
+      }
+    }
+  }
+  return components;
+}
+function parseAbi(signatures) {
+  const structs = parseStructs(signatures);
+  const abi = [];
+  const length = signatures.length;
+  for (let i = 0;i < length; i++) {
+    const signature = signatures[i];
+    if (isStructSignature(signature))
+      continue;
+    abi.push(parseSignature(signature, structs));
+  }
+  return abi;
+}
+function parseAbiParameters(params) {
+  const abiParameters = [];
+  if (typeof params === "string") {
+    const parameters = splitParameters(params);
+    const length = parameters.length;
+    for (let i = 0;i < length; i++) {
+      abiParameters.push(parseAbiParameter(parameters[i], { modifiers }));
+    }
+  } else {
+    const structs = parseStructs(params);
+    const length = params.length;
+    for (let i = 0;i < length; i++) {
+      const signature = params[i];
+      if (isStructSignature(signature))
+        continue;
+      const parameters = splitParameters(signature);
+      const length2 = parameters.length;
+      for (let k = 0;k < length2; k++) {
+        abiParameters.push(parseAbiParameter(parameters[k], { modifiers, structs }));
+      }
+    }
+  }
+  if (abiParameters.length === 0)
+    throw new InvalidAbiParametersError({ params });
+  return abiParameters;
+}
+var zeroAddress = "0x0000000000000000000000000000000000000000";
+function formatAbiItem2(abiItem, { includeName = false } = {}) {
+  if (abiItem.type !== "function" && abiItem.type !== "event" && abiItem.type !== "error")
+    throw new InvalidDefinitionTypeError(abiItem.type);
+  return `${abiItem.name}(${formatAbiParams(abiItem.inputs, { includeName })})`;
+}
+function formatAbiParams(params, { includeName = false } = {}) {
+  if (!params)
+    return "";
+  return params.map((param) => formatAbiParam(param, { includeName })).join(includeName ? ", " : ",");
+}
+function formatAbiParam(param, { includeName }) {
+  if (param.type.startsWith("tuple")) {
+    return `(${formatAbiParams(param.components, { includeName })})${param.type.slice("tuple".length)}`;
+  }
+  return param.type + (includeName && param.name ? ` ${param.name}` : "");
+}
+function isHex(value, { strict = true } = {}) {
+  if (!value)
+    return false;
+  if (typeof value !== "string")
+    return false;
+  return strict ? /^0x[0-9a-fA-F]*$/.test(value) : value.startsWith("0x");
+}
+function size(value) {
+  if (isHex(value, { strict: false }))
+    return Math.ceil((value.length - 2) / 2);
+  return value.length;
+}
+var version2 = "2.34.0";
+var errorConfig = {
+  getDocsUrl: ({ docsBaseUrl, docsPath = "", docsSlug }) => docsPath ? `${docsBaseUrl ?? "https://viem.sh"}${docsPath}${docsSlug ? `#${docsSlug}` : ""}` : undefined,
+  version: `viem@${version2}`
+};
+
+class BaseError3 extends Error {
+  constructor(shortMessage, args = {}) {
     const details = (() => {
-      if (args.cause instanceof BaseError)
+      if (args.cause instanceof BaseError3)
         return args.cause.details;
       if (args.cause?.message)
         return args.cause.message;
       return args.details;
     })();
     const docsPath = (() => {
-      if (args.cause instanceof BaseError)
+      if (args.cause instanceof BaseError3)
         return args.cause.docsPath || args.docsPath;
       return args.docsPath;
     })();
@@ -6679,7 +7464,7 @@ class BaseError extends Error {
     this.metaMessages = args.metaMessages;
     this.name = args.name ?? this.name;
     this.shortMessage = shortMessage;
-    this.version = version;
+    this.version = version2;
   }
   walk(fn) {
     return walk(this, fn);
@@ -6693,7 +7478,158 @@ function walk(err, fn) {
   return fn ? null : err;
 }
 
-class InvalidAddressError extends BaseError {
+class AbiDecodingDataSizeTooSmallError extends BaseError3 {
+  constructor({ data, params, size: size2 }) {
+    super([`Data size of ${size2} bytes is too small for given parameters.`].join(`
+`), {
+      metaMessages: [
+        `Params: (${formatAbiParams(params, { includeName: true })})`,
+        `Data:   ${data} (${size2} bytes)`
+      ],
+      name: "AbiDecodingDataSizeTooSmallError"
+    });
+    Object.defineProperty(this, "data", {
+      enumerable: true,
+      configurable: true,
+      writable: true,
+      value: undefined
+    });
+    Object.defineProperty(this, "params", {
+      enumerable: true,
+      configurable: true,
+      writable: true,
+      value: undefined
+    });
+    Object.defineProperty(this, "size", {
+      enumerable: true,
+      configurable: true,
+      writable: true,
+      value: undefined
+    });
+    this.data = data;
+    this.params = params;
+    this.size = size2;
+  }
+}
+
+class AbiDecodingZeroDataError extends BaseError3 {
+  constructor() {
+    super('Cannot decode zero data ("0x") with ABI parameters.', {
+      name: "AbiDecodingZeroDataError"
+    });
+  }
+}
+
+class AbiEncodingArrayLengthMismatchError extends BaseError3 {
+  constructor({ expectedLength, givenLength, type }) {
+    super([
+      `ABI encoding array length mismatch for type ${type}.`,
+      `Expected length: ${expectedLength}`,
+      `Given length: ${givenLength}`
+    ].join(`
+`), { name: "AbiEncodingArrayLengthMismatchError" });
+  }
+}
+
+class AbiEncodingBytesSizeMismatchError extends BaseError3 {
+  constructor({ expectedSize, value }) {
+    super(`Size of bytes "${value}" (bytes${size(value)}) does not match expected size (bytes${expectedSize}).`, { name: "AbiEncodingBytesSizeMismatchError" });
+  }
+}
+
+class AbiEncodingLengthMismatchError extends BaseError3 {
+  constructor({ expectedLength, givenLength }) {
+    super([
+      "ABI encoding params/values length mismatch.",
+      `Expected length (params): ${expectedLength}`,
+      `Given length (values): ${givenLength}`
+    ].join(`
+`), { name: "AbiEncodingLengthMismatchError" });
+  }
+}
+
+class AbiFunctionNotFoundError extends BaseError3 {
+  constructor(functionName, { docsPath } = {}) {
+    super([
+      `Function ${functionName ? `"${functionName}" ` : ""}not found on ABI.`,
+      "Make sure you are using the correct ABI and that the function exists on it."
+    ].join(`
+`), {
+      docsPath,
+      name: "AbiFunctionNotFoundError"
+    });
+  }
+}
+
+class AbiFunctionOutputsNotFoundError extends BaseError3 {
+  constructor(functionName, { docsPath }) {
+    super([
+      `Function "${functionName}" does not contain any \`outputs\` on ABI.`,
+      "Cannot decode function result without knowing what the parameter types are.",
+      "Make sure you are using the correct ABI and that the function exists on it."
+    ].join(`
+`), {
+      docsPath,
+      name: "AbiFunctionOutputsNotFoundError"
+    });
+  }
+}
+
+class AbiItemAmbiguityError extends BaseError3 {
+  constructor(x, y) {
+    super("Found ambiguous types in overloaded ABI items.", {
+      metaMessages: [
+        `\`${x.type}\` in \`${formatAbiItem2(x.abiItem)}\`, and`,
+        `\`${y.type}\` in \`${formatAbiItem2(y.abiItem)}\``,
+        "",
+        "These types encode differently and cannot be distinguished at runtime.",
+        "Remove one of the ambiguous items in the ABI."
+      ],
+      name: "AbiItemAmbiguityError"
+    });
+  }
+}
+
+class InvalidAbiEncodingTypeError extends BaseError3 {
+  constructor(type, { docsPath }) {
+    super([
+      `Type "${type}" is not a valid encoding type.`,
+      "Please provide a valid ABI type."
+    ].join(`
+`), { docsPath, name: "InvalidAbiEncodingType" });
+  }
+}
+
+class InvalidAbiDecodingTypeError extends BaseError3 {
+  constructor(type, { docsPath }) {
+    super([
+      `Type "${type}" is not a valid decoding type.`,
+      "Please provide a valid ABI type."
+    ].join(`
+`), { docsPath, name: "InvalidAbiDecodingType" });
+  }
+}
+
+class InvalidArrayError extends BaseError3 {
+  constructor(value) {
+    super([`Value "${value}" is not a valid array.`].join(`
+`), {
+      name: "InvalidArrayError"
+    });
+  }
+}
+
+class InvalidDefinitionTypeError extends BaseError3 {
+  constructor(type) {
+    super([
+      `"${type}" is not a valid definition type.`,
+      'Valid types: "function", "event", "error"'
+    ].join(`
+`), { name: "InvalidDefinitionTypeError" });
+  }
+}
+
+class InvalidAddressError extends BaseError3 {
   constructor({ address }) {
     super(`Address "${address}" is invalid.`, {
       metaMessages: [
@@ -6704,68 +7640,87 @@ class InvalidAddressError extends BaseError {
     });
   }
 }
-function isHex(value, { strict = true } = {}) {
-  if (!value)
-    return false;
-  if (typeof value !== "string")
-    return false;
-  return strict ? /^0x[0-9a-fA-F]*$/.test(value) : value.startsWith("0x");
-}
 
-class SizeExceedsPaddingSizeError extends BaseError {
-  constructor({ size, targetSize, type }) {
-    super(`${type.charAt(0).toUpperCase()}${type.slice(1).toLowerCase()} size (${size}) exceeds padding size (${targetSize}).`, { name: "SizeExceedsPaddingSizeError" });
+class SliceOffsetOutOfBoundsError extends BaseError3 {
+  constructor({ offset, position, size: size2 }) {
+    super(`Slice ${position === "start" ? "starting" : "ending"} at offset "${offset}" is out-of-bounds (size: ${size2}).`, { name: "SliceOffsetOutOfBoundsError" });
   }
 }
-function pad(hexOrBytes, { dir, size = 32 } = {}) {
-  if (typeof hexOrBytes === "string")
-    return padHex(hexOrBytes, { dir, size });
-  return padBytes(hexOrBytes, { dir, size });
+
+class SizeExceedsPaddingSizeError extends BaseError3 {
+  constructor({ size: size2, targetSize, type }) {
+    super(`${type.charAt(0).toUpperCase()}${type.slice(1).toLowerCase()} size (${size2}) exceeds padding size (${targetSize}).`, { name: "SizeExceedsPaddingSizeError" });
+  }
 }
-function padHex(hex_, { dir, size = 32 } = {}) {
-  if (size === null)
+function pad(hexOrBytes, { dir, size: size2 = 32 } = {}) {
+  if (typeof hexOrBytes === "string")
+    return padHex(hexOrBytes, { dir, size: size2 });
+  return padBytes(hexOrBytes, { dir, size: size2 });
+}
+function padHex(hex_, { dir, size: size2 = 32 } = {}) {
+  if (size2 === null)
     return hex_;
   const hex = hex_.replace("0x", "");
-  if (hex.length > size * 2)
+  if (hex.length > size2 * 2)
     throw new SizeExceedsPaddingSizeError({
       size: Math.ceil(hex.length / 2),
-      targetSize: size,
+      targetSize: size2,
       type: "hex"
     });
-  return `0x${hex[dir === "right" ? "padEnd" : "padStart"](size * 2, "0")}`;
+  return `0x${hex[dir === "right" ? "padEnd" : "padStart"](size2 * 2, "0")}`;
 }
-function padBytes(bytes, { dir, size = 32 } = {}) {
-  if (size === null)
+function padBytes(bytes, { dir, size: size2 = 32 } = {}) {
+  if (size2 === null)
     return bytes;
-  if (bytes.length > size)
+  if (bytes.length > size2)
     throw new SizeExceedsPaddingSizeError({
       size: bytes.length,
-      targetSize: size,
+      targetSize: size2,
       type: "bytes"
     });
-  const paddedBytes = new Uint8Array(size);
-  for (let i = 0;i < size; i++) {
+  const paddedBytes = new Uint8Array(size2);
+  for (let i = 0;i < size2; i++) {
     const padEnd = dir === "right";
-    paddedBytes[padEnd ? i : size - i - 1] = bytes[padEnd ? i : bytes.length - i - 1];
+    paddedBytes[padEnd ? i : size2 - i - 1] = bytes[padEnd ? i : bytes.length - i - 1];
   }
   return paddedBytes;
 }
 
-class IntegerOutOfRangeError extends BaseError {
-  constructor({ max, min, signed, size, value }) {
-    super(`Number "${value}" is not in safe ${size ? `${size * 8}-bit ${signed ? "signed" : "unsigned"} ` : ""}integer range ${max ? `(${min} to ${max})` : `(above ${min})`}`, { name: "IntegerOutOfRangeError" });
+class IntegerOutOfRangeError extends BaseError3 {
+  constructor({ max, min, signed, size: size2, value }) {
+    super(`Number "${value}" is not in safe ${size2 ? `${size2 * 8}-bit ${signed ? "signed" : "unsigned"} ` : ""}integer range ${max ? `(${min} to ${max})` : `(above ${min})`}`, { name: "IntegerOutOfRangeError" });
   }
 }
 
-class SizeOverflowError extends BaseError {
+class InvalidBytesBooleanError extends BaseError3 {
+  constructor(bytes) {
+    super(`Bytes value "${bytes}" is not a valid boolean. The bytes array must contain a single byte of either a 0 or 1 value.`, {
+      name: "InvalidBytesBooleanError"
+    });
+  }
+}
+
+class SizeOverflowError extends BaseError3 {
   constructor({ givenSize, maxSize }) {
     super(`Size cannot exceed ${maxSize} bytes. Given size: ${givenSize} bytes.`, { name: "SizeOverflowError" });
   }
 }
-function size(value) {
-  if (isHex(value, { strict: false }))
-    return Math.ceil((value.length - 2) / 2);
-  return value.length;
+function trim(hexOrBytes, { dir = "left" } = {}) {
+  let data = typeof hexOrBytes === "string" ? hexOrBytes.replace("0x", "") : hexOrBytes;
+  let sliceLength = 0;
+  for (let i = 0;i < data.length - 1; i++) {
+    if (data[dir === "left" ? i : data.length - i - 1].toString() === "0")
+      sliceLength++;
+    else
+      break;
+  }
+  data = dir === "left" ? data.slice(sliceLength) : data.slice(0, data.length - sliceLength);
+  if (typeof hexOrBytes === "string") {
+    if (data.length === 1 && dir === "right")
+      data = `${data}0`;
+    return `0x${data.length % 2 === 1 ? `0${data}` : data}`;
+  }
+  return data;
 }
 function assertSize(hexOrBytes, { size: size2 }) {
   if (size(hexOrBytes) > size2)
@@ -6905,7 +7860,7 @@ function hexToBytes(hex_, opts = {}) {
     const nibbleLeft = charCodeToBase16(hexString.charCodeAt(j++));
     const nibbleRight = charCodeToBase16(hexString.charCodeAt(j++));
     if (nibbleLeft === undefined || nibbleRight === undefined) {
-      throw new BaseError(`Invalid byte sequence ("${hexString[j - 2]}${hexString[j - 1]}" in "${hexString}").`);
+      throw new BaseError3(`Invalid byte sequence ("${hexString[j - 2]}${hexString[j - 1]}" in "${hexString}").`);
     }
     bytes[index] = nibbleLeft * 16 + nibbleRight;
   }
@@ -7184,12 +8139,907 @@ function getAddress(address, chainId) {
     throw new InvalidAddressError({ address });
   return checksumAddress(address, chainId);
 }
+
+class NegativeOffsetError extends BaseError3 {
+  constructor({ offset }) {
+    super(`Offset \`${offset}\` cannot be negative.`, {
+      name: "NegativeOffsetError"
+    });
+  }
+}
+
+class PositionOutOfBoundsError extends BaseError3 {
+  constructor({ length, position }) {
+    super(`Position \`${position}\` is out of bounds (\`0 < position < ${length}\`).`, { name: "PositionOutOfBoundsError" });
+  }
+}
+
+class RecursiveReadLimitExceededError extends BaseError3 {
+  constructor({ count, limit }) {
+    super(`Recursive read limit of \`${limit}\` exceeded (recursive read count: \`${count}\`).`, { name: "RecursiveReadLimitExceededError" });
+  }
+}
+var staticCursor = {
+  bytes: new Uint8Array,
+  dataView: new DataView(new ArrayBuffer(0)),
+  position: 0,
+  positionReadCount: new Map,
+  recursiveReadCount: 0,
+  recursiveReadLimit: Number.POSITIVE_INFINITY,
+  assertReadLimit() {
+    if (this.recursiveReadCount >= this.recursiveReadLimit)
+      throw new RecursiveReadLimitExceededError({
+        count: this.recursiveReadCount + 1,
+        limit: this.recursiveReadLimit
+      });
+  },
+  assertPosition(position) {
+    if (position < 0 || position > this.bytes.length - 1)
+      throw new PositionOutOfBoundsError({
+        length: this.bytes.length,
+        position
+      });
+  },
+  decrementPosition(offset) {
+    if (offset < 0)
+      throw new NegativeOffsetError({ offset });
+    const position = this.position - offset;
+    this.assertPosition(position);
+    this.position = position;
+  },
+  getReadCount(position) {
+    return this.positionReadCount.get(position || this.position) || 0;
+  },
+  incrementPosition(offset) {
+    if (offset < 0)
+      throw new NegativeOffsetError({ offset });
+    const position = this.position + offset;
+    this.assertPosition(position);
+    this.position = position;
+  },
+  inspectByte(position_) {
+    const position = position_ ?? this.position;
+    this.assertPosition(position);
+    return this.bytes[position];
+  },
+  inspectBytes(length, position_) {
+    const position = position_ ?? this.position;
+    this.assertPosition(position + length - 1);
+    return this.bytes.subarray(position, position + length);
+  },
+  inspectUint8(position_) {
+    const position = position_ ?? this.position;
+    this.assertPosition(position);
+    return this.bytes[position];
+  },
+  inspectUint16(position_) {
+    const position = position_ ?? this.position;
+    this.assertPosition(position + 1);
+    return this.dataView.getUint16(position);
+  },
+  inspectUint24(position_) {
+    const position = position_ ?? this.position;
+    this.assertPosition(position + 2);
+    return (this.dataView.getUint16(position) << 8) + this.dataView.getUint8(position + 2);
+  },
+  inspectUint32(position_) {
+    const position = position_ ?? this.position;
+    this.assertPosition(position + 3);
+    return this.dataView.getUint32(position);
+  },
+  pushByte(byte) {
+    this.assertPosition(this.position);
+    this.bytes[this.position] = byte;
+    this.position++;
+  },
+  pushBytes(bytes) {
+    this.assertPosition(this.position + bytes.length - 1);
+    this.bytes.set(bytes, this.position);
+    this.position += bytes.length;
+  },
+  pushUint8(value) {
+    this.assertPosition(this.position);
+    this.bytes[this.position] = value;
+    this.position++;
+  },
+  pushUint16(value) {
+    this.assertPosition(this.position + 1);
+    this.dataView.setUint16(this.position, value);
+    this.position += 2;
+  },
+  pushUint24(value) {
+    this.assertPosition(this.position + 2);
+    this.dataView.setUint16(this.position, value >> 8);
+    this.dataView.setUint8(this.position + 2, value & ~4294967040);
+    this.position += 3;
+  },
+  pushUint32(value) {
+    this.assertPosition(this.position + 3);
+    this.dataView.setUint32(this.position, value);
+    this.position += 4;
+  },
+  readByte() {
+    this.assertReadLimit();
+    this._touch();
+    const value = this.inspectByte();
+    this.position++;
+    return value;
+  },
+  readBytes(length, size2) {
+    this.assertReadLimit();
+    this._touch();
+    const value = this.inspectBytes(length);
+    this.position += size2 ?? length;
+    return value;
+  },
+  readUint8() {
+    this.assertReadLimit();
+    this._touch();
+    const value = this.inspectUint8();
+    this.position += 1;
+    return value;
+  },
+  readUint16() {
+    this.assertReadLimit();
+    this._touch();
+    const value = this.inspectUint16();
+    this.position += 2;
+    return value;
+  },
+  readUint24() {
+    this.assertReadLimit();
+    this._touch();
+    const value = this.inspectUint24();
+    this.position += 3;
+    return value;
+  },
+  readUint32() {
+    this.assertReadLimit();
+    this._touch();
+    const value = this.inspectUint32();
+    this.position += 4;
+    return value;
+  },
+  get remaining() {
+    return this.bytes.length - this.position;
+  },
+  setPosition(position) {
+    const oldPosition = this.position;
+    this.assertPosition(position);
+    this.position = position;
+    return () => this.position = oldPosition;
+  },
+  _touch() {
+    if (this.recursiveReadLimit === Number.POSITIVE_INFINITY)
+      return;
+    const count = this.getReadCount();
+    this.positionReadCount.set(this.position, count + 1);
+    if (count > 0)
+      this.recursiveReadCount++;
+  }
+};
+function createCursor(bytes, { recursiveReadLimit = 8192 } = {}) {
+  const cursor = Object.create(staticCursor);
+  cursor.bytes = bytes;
+  cursor.dataView = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  cursor.positionReadCount = new Map;
+  cursor.recursiveReadLimit = recursiveReadLimit;
+  return cursor;
+}
+function slice(value, start, end, { strict } = {}) {
+  if (isHex(value, { strict: false }))
+    return sliceHex(value, start, end, {
+      strict
+    });
+  return sliceBytes(value, start, end, {
+    strict
+  });
+}
+function assertStartOffset(value, start) {
+  if (typeof start === "number" && start > 0 && start > size(value) - 1)
+    throw new SliceOffsetOutOfBoundsError({
+      offset: start,
+      position: "start",
+      size: size(value)
+    });
+}
+function assertEndOffset(value, start, end) {
+  if (typeof start === "number" && typeof end === "number" && size(value) !== end - start) {
+    throw new SliceOffsetOutOfBoundsError({
+      offset: end,
+      position: "end",
+      size: size(value)
+    });
+  }
+}
+function sliceBytes(value_, start, end, { strict } = {}) {
+  assertStartOffset(value_, start);
+  const value = value_.slice(start, end);
+  if (strict)
+    assertEndOffset(value, start, end);
+  return value;
+}
+function sliceHex(value_, start, end, { strict } = {}) {
+  assertStartOffset(value_, start);
+  const value = `0x${value_.replace("0x", "").slice((start ?? 0) * 2, (end ?? value_.length) * 2)}`;
+  if (strict)
+    assertEndOffset(value, start, end);
+  return value;
+}
+function bytesToBigInt(bytes, opts = {}) {
+  if (typeof opts.size !== "undefined")
+    assertSize(bytes, { size: opts.size });
+  const hex = bytesToHex(bytes, opts);
+  return hexToBigInt(hex, opts);
+}
+function bytesToBool(bytes_, opts = {}) {
+  let bytes = bytes_;
+  if (typeof opts.size !== "undefined") {
+    assertSize(bytes, { size: opts.size });
+    bytes = trim(bytes);
+  }
+  if (bytes.length > 1 || bytes[0] > 1)
+    throw new InvalidBytesBooleanError(bytes);
+  return Boolean(bytes[0]);
+}
+function bytesToNumber(bytes, opts = {}) {
+  if (typeof opts.size !== "undefined")
+    assertSize(bytes, { size: opts.size });
+  const hex = bytesToHex(bytes, opts);
+  return hexToNumber(hex, opts);
+}
+function bytesToString(bytes_, opts = {}) {
+  let bytes = bytes_;
+  if (typeof opts.size !== "undefined") {
+    assertSize(bytes, { size: opts.size });
+    bytes = trim(bytes, { dir: "right" });
+  }
+  return new TextDecoder().decode(bytes);
+}
+function concat(values) {
+  if (typeof values[0] === "string")
+    return concatHex(values);
+  return concatBytes2(values);
+}
+function concatBytes2(values) {
+  let length = 0;
+  for (const arr of values) {
+    length += arr.length;
+  }
+  const result = new Uint8Array(length);
+  let offset = 0;
+  for (const arr of values) {
+    result.set(arr, offset);
+    offset += arr.length;
+  }
+  return result;
+}
+function concatHex(values) {
+  return `0x${values.reduce((acc, x) => acc + x.replace("0x", ""), "")}`;
+}
+var integerRegex2 = /^(u?int)(8|16|24|32|40|48|56|64|72|80|88|96|104|112|120|128|136|144|152|160|168|176|184|192|200|208|216|224|232|240|248|256)?$/;
+function encodeAbiParameters(params, values) {
+  if (params.length !== values.length)
+    throw new AbiEncodingLengthMismatchError({
+      expectedLength: params.length,
+      givenLength: values.length
+    });
+  const preparedParams = prepareParams({
+    params,
+    values
+  });
+  const data = encodeParams(preparedParams);
+  if (data.length === 0)
+    return "0x";
+  return data;
+}
+function prepareParams({ params, values }) {
+  const preparedParams = [];
+  for (let i = 0;i < params.length; i++) {
+    preparedParams.push(prepareParam({ param: params[i], value: values[i] }));
+  }
+  return preparedParams;
+}
+function prepareParam({ param, value }) {
+  const arrayComponents = getArrayComponents(param.type);
+  if (arrayComponents) {
+    const [length, type] = arrayComponents;
+    return encodeArray(value, { length, param: { ...param, type } });
+  }
+  if (param.type === "tuple") {
+    return encodeTuple(value, {
+      param
+    });
+  }
+  if (param.type === "address") {
+    return encodeAddress(value);
+  }
+  if (param.type === "bool") {
+    return encodeBool(value);
+  }
+  if (param.type.startsWith("uint") || param.type.startsWith("int")) {
+    const signed = param.type.startsWith("int");
+    const [, , size2 = "256"] = integerRegex2.exec(param.type) ?? [];
+    return encodeNumber(value, {
+      signed,
+      size: Number(size2)
+    });
+  }
+  if (param.type.startsWith("bytes")) {
+    return encodeBytes(value, { param });
+  }
+  if (param.type === "string") {
+    return encodeString(value);
+  }
+  throw new InvalidAbiEncodingTypeError(param.type, {
+    docsPath: "/docs/contract/encodeAbiParameters"
+  });
+}
+function encodeParams(preparedParams) {
+  let staticSize = 0;
+  for (let i = 0;i < preparedParams.length; i++) {
+    const { dynamic, encoded } = preparedParams[i];
+    if (dynamic)
+      staticSize += 32;
+    else
+      staticSize += size(encoded);
+  }
+  const staticParams = [];
+  const dynamicParams = [];
+  let dynamicSize = 0;
+  for (let i = 0;i < preparedParams.length; i++) {
+    const { dynamic, encoded } = preparedParams[i];
+    if (dynamic) {
+      staticParams.push(numberToHex(staticSize + dynamicSize, { size: 32 }));
+      dynamicParams.push(encoded);
+      dynamicSize += size(encoded);
+    } else {
+      staticParams.push(encoded);
+    }
+  }
+  return concat([...staticParams, ...dynamicParams]);
+}
+function encodeAddress(value) {
+  if (!isAddress(value))
+    throw new InvalidAddressError({ address: value });
+  return { dynamic: false, encoded: padHex(value.toLowerCase()) };
+}
+function encodeArray(value, { length, param }) {
+  const dynamic = length === null;
+  if (!Array.isArray(value))
+    throw new InvalidArrayError(value);
+  if (!dynamic && value.length !== length)
+    throw new AbiEncodingArrayLengthMismatchError({
+      expectedLength: length,
+      givenLength: value.length,
+      type: `${param.type}[${length}]`
+    });
+  let dynamicChild = false;
+  const preparedParams = [];
+  for (let i = 0;i < value.length; i++) {
+    const preparedParam = prepareParam({ param, value: value[i] });
+    if (preparedParam.dynamic)
+      dynamicChild = true;
+    preparedParams.push(preparedParam);
+  }
+  if (dynamic || dynamicChild) {
+    const data = encodeParams(preparedParams);
+    if (dynamic) {
+      const length2 = numberToHex(preparedParams.length, { size: 32 });
+      return {
+        dynamic: true,
+        encoded: preparedParams.length > 0 ? concat([length2, data]) : length2
+      };
+    }
+    if (dynamicChild)
+      return { dynamic: true, encoded: data };
+  }
+  return {
+    dynamic: false,
+    encoded: concat(preparedParams.map(({ encoded }) => encoded))
+  };
+}
+function encodeBytes(value, { param }) {
+  const [, paramSize] = param.type.split("bytes");
+  const bytesSize = size(value);
+  if (!paramSize) {
+    let value_ = value;
+    if (bytesSize % 32 !== 0)
+      value_ = padHex(value_, {
+        dir: "right",
+        size: Math.ceil((value.length - 2) / 2 / 32) * 32
+      });
+    return {
+      dynamic: true,
+      encoded: concat([padHex(numberToHex(bytesSize, { size: 32 })), value_])
+    };
+  }
+  if (bytesSize !== Number.parseInt(paramSize))
+    throw new AbiEncodingBytesSizeMismatchError({
+      expectedSize: Number.parseInt(paramSize),
+      value
+    });
+  return { dynamic: false, encoded: padHex(value, { dir: "right" }) };
+}
+function encodeBool(value) {
+  if (typeof value !== "boolean")
+    throw new BaseError3(`Invalid boolean value: "${value}" (type: ${typeof value}). Expected: \`true\` or \`false\`.`);
+  return { dynamic: false, encoded: padHex(boolToHex(value)) };
+}
+function encodeNumber(value, { signed, size: size2 = 256 }) {
+  if (typeof size2 === "number") {
+    const max = 2n ** (BigInt(size2) - (signed ? 1n : 0n)) - 1n;
+    const min = signed ? -max - 1n : 0n;
+    if (value > max || value < min)
+      throw new IntegerOutOfRangeError({
+        max: max.toString(),
+        min: min.toString(),
+        signed,
+        size: size2 / 8,
+        value: value.toString()
+      });
+  }
+  return {
+    dynamic: false,
+    encoded: numberToHex(value, {
+      size: 32,
+      signed
+    })
+  };
+}
+function encodeString(value) {
+  const hexValue = stringToHex(value);
+  const partsLength = Math.ceil(size(hexValue) / 32);
+  const parts = [];
+  for (let i = 0;i < partsLength; i++) {
+    parts.push(padHex(slice(hexValue, i * 32, (i + 1) * 32), {
+      dir: "right"
+    }));
+  }
+  return {
+    dynamic: true,
+    encoded: concat([
+      padHex(numberToHex(size(hexValue), { size: 32 })),
+      ...parts
+    ])
+  };
+}
+function encodeTuple(value, { param }) {
+  let dynamic = false;
+  const preparedParams = [];
+  for (let i = 0;i < param.components.length; i++) {
+    const param_ = param.components[i];
+    const index = Array.isArray(value) ? i : param_.name;
+    const preparedParam = prepareParam({
+      param: param_,
+      value: value[index]
+    });
+    preparedParams.push(preparedParam);
+    if (preparedParam.dynamic)
+      dynamic = true;
+  }
+  return {
+    dynamic,
+    encoded: dynamic ? encodeParams(preparedParams) : concat(preparedParams.map(({ encoded }) => encoded))
+  };
+}
+function getArrayComponents(type) {
+  const matches = type.match(/^(.*)\[(\d+)?\]$/);
+  return matches ? [matches[2] ? Number(matches[2]) : null, matches[1]] : undefined;
+}
+function decodeAbiParameters(params, data) {
+  const bytes = typeof data === "string" ? hexToBytes(data) : data;
+  const cursor = createCursor(bytes);
+  if (size(bytes) === 0 && params.length > 0)
+    throw new AbiDecodingZeroDataError;
+  if (size(data) && size(data) < 32)
+    throw new AbiDecodingDataSizeTooSmallError({
+      data: typeof data === "string" ? data : bytesToHex(data),
+      params,
+      size: size(data)
+    });
+  let consumed = 0;
+  const values = [];
+  for (let i = 0;i < params.length; ++i) {
+    const param = params[i];
+    cursor.setPosition(consumed);
+    const [data2, consumed_] = decodeParameter(cursor, param, {
+      staticPosition: 0
+    });
+    consumed += consumed_;
+    values.push(data2);
+  }
+  return values;
+}
+function decodeParameter(cursor, param, { staticPosition }) {
+  const arrayComponents = getArrayComponents(param.type);
+  if (arrayComponents) {
+    const [length, type] = arrayComponents;
+    return decodeArray(cursor, { ...param, type }, { length, staticPosition });
+  }
+  if (param.type === "tuple")
+    return decodeTuple(cursor, param, { staticPosition });
+  if (param.type === "address")
+    return decodeAddress(cursor);
+  if (param.type === "bool")
+    return decodeBool(cursor);
+  if (param.type.startsWith("bytes"))
+    return decodeBytes(cursor, param, { staticPosition });
+  if (param.type.startsWith("uint") || param.type.startsWith("int"))
+    return decodeNumber(cursor, param);
+  if (param.type === "string")
+    return decodeString(cursor, { staticPosition });
+  throw new InvalidAbiDecodingTypeError(param.type, {
+    docsPath: "/docs/contract/decodeAbiParameters"
+  });
+}
+var sizeOfLength = 32;
+var sizeOfOffset = 32;
+function decodeAddress(cursor) {
+  const value = cursor.readBytes(32);
+  return [checksumAddress(bytesToHex(sliceBytes(value, -20))), 32];
+}
+function decodeArray(cursor, param, { length, staticPosition }) {
+  if (!length) {
+    const offset = bytesToNumber(cursor.readBytes(sizeOfOffset));
+    const start = staticPosition + offset;
+    const startOfData = start + sizeOfLength;
+    cursor.setPosition(start);
+    const length2 = bytesToNumber(cursor.readBytes(sizeOfLength));
+    const dynamicChild = hasDynamicChild(param);
+    let consumed2 = 0;
+    const value2 = [];
+    for (let i = 0;i < length2; ++i) {
+      cursor.setPosition(startOfData + (dynamicChild ? i * 32 : consumed2));
+      const [data, consumed_] = decodeParameter(cursor, param, {
+        staticPosition: startOfData
+      });
+      consumed2 += consumed_;
+      value2.push(data);
+    }
+    cursor.setPosition(staticPosition + 32);
+    return [value2, 32];
+  }
+  if (hasDynamicChild(param)) {
+    const offset = bytesToNumber(cursor.readBytes(sizeOfOffset));
+    const start = staticPosition + offset;
+    const value2 = [];
+    for (let i = 0;i < length; ++i) {
+      cursor.setPosition(start + i * 32);
+      const [data] = decodeParameter(cursor, param, {
+        staticPosition: start
+      });
+      value2.push(data);
+    }
+    cursor.setPosition(staticPosition + 32);
+    return [value2, 32];
+  }
+  let consumed = 0;
+  const value = [];
+  for (let i = 0;i < length; ++i) {
+    const [data, consumed_] = decodeParameter(cursor, param, {
+      staticPosition: staticPosition + consumed
+    });
+    consumed += consumed_;
+    value.push(data);
+  }
+  return [value, consumed];
+}
+function decodeBool(cursor) {
+  return [bytesToBool(cursor.readBytes(32), { size: 32 }), 32];
+}
+function decodeBytes(cursor, param, { staticPosition }) {
+  const [_, size2] = param.type.split("bytes");
+  if (!size2) {
+    const offset = bytesToNumber(cursor.readBytes(32));
+    cursor.setPosition(staticPosition + offset);
+    const length = bytesToNumber(cursor.readBytes(32));
+    if (length === 0) {
+      cursor.setPosition(staticPosition + 32);
+      return ["0x", 32];
+    }
+    const data = cursor.readBytes(length);
+    cursor.setPosition(staticPosition + 32);
+    return [bytesToHex(data), 32];
+  }
+  const value = bytesToHex(cursor.readBytes(Number.parseInt(size2), 32));
+  return [value, 32];
+}
+function decodeNumber(cursor, param) {
+  const signed = param.type.startsWith("int");
+  const size2 = Number.parseInt(param.type.split("int")[1] || "256");
+  const value = cursor.readBytes(32);
+  return [
+    size2 > 48 ? bytesToBigInt(value, { signed }) : bytesToNumber(value, { signed }),
+    32
+  ];
+}
+function decodeTuple(cursor, param, { staticPosition }) {
+  const hasUnnamedChild = param.components.length === 0 || param.components.some(({ name }) => !name);
+  const value = hasUnnamedChild ? [] : {};
+  let consumed = 0;
+  if (hasDynamicChild(param)) {
+    const offset = bytesToNumber(cursor.readBytes(sizeOfOffset));
+    const start = staticPosition + offset;
+    for (let i = 0;i < param.components.length; ++i) {
+      const component = param.components[i];
+      cursor.setPosition(start + consumed);
+      const [data, consumed_] = decodeParameter(cursor, component, {
+        staticPosition: start
+      });
+      consumed += consumed_;
+      value[hasUnnamedChild ? i : component?.name] = data;
+    }
+    cursor.setPosition(staticPosition + 32);
+    return [value, 32];
+  }
+  for (let i = 0;i < param.components.length; ++i) {
+    const component = param.components[i];
+    const [data, consumed_] = decodeParameter(cursor, component, {
+      staticPosition
+    });
+    value[hasUnnamedChild ? i : component?.name] = data;
+    consumed += consumed_;
+  }
+  return [value, consumed];
+}
+function decodeString(cursor, { staticPosition }) {
+  const offset = bytesToNumber(cursor.readBytes(32));
+  const start = staticPosition + offset;
+  cursor.setPosition(start);
+  const length = bytesToNumber(cursor.readBytes(32));
+  if (length === 0) {
+    cursor.setPosition(staticPosition + 32);
+    return ["", 32];
+  }
+  const data = cursor.readBytes(length, 32);
+  const value = bytesToString(trim(data));
+  cursor.setPosition(staticPosition + 32);
+  return [value, 32];
+}
+function hasDynamicChild(param) {
+  const { type } = param;
+  if (type === "string")
+    return true;
+  if (type === "bytes")
+    return true;
+  if (type.endsWith("[]"))
+    return true;
+  if (type === "tuple")
+    return param.components?.some(hasDynamicChild);
+  const arrayComponents = getArrayComponents(param.type);
+  if (arrayComponents && hasDynamicChild({ ...param, type: arrayComponents[1] }))
+    return true;
+  return false;
+}
+var hash = (value) => keccak256(toBytes(value));
+function hashSignature(sig) {
+  return hash(sig);
+}
+function normalizeSignature(signature) {
+  let active = true;
+  let current = "";
+  let level = 0;
+  let result = "";
+  let valid = false;
+  for (let i = 0;i < signature.length; i++) {
+    const char = signature[i];
+    if (["(", ")", ","].includes(char))
+      active = true;
+    if (char === "(")
+      level++;
+    if (char === ")")
+      level--;
+    if (!active)
+      continue;
+    if (level === 0) {
+      if (char === " " && ["event", "function", ""].includes(result))
+        result = "";
+      else {
+        result += char;
+        if (char === ")") {
+          valid = true;
+          break;
+        }
+      }
+      continue;
+    }
+    if (char === " ") {
+      if (signature[i - 1] !== "," && current !== "," && current !== ",(") {
+        current = "";
+        active = false;
+      }
+      continue;
+    }
+    result += char;
+    current += char;
+  }
+  if (!valid)
+    throw new BaseError3("Unable to normalize signature.");
+  return result;
+}
+var toSignature = (def) => {
+  const def_ = (() => {
+    if (typeof def === "string")
+      return def;
+    return formatAbiItem(def);
+  })();
+  return normalizeSignature(def_);
+};
+function toSignatureHash(fn) {
+  return hashSignature(toSignature(fn));
+}
+var toEventSelector = toSignatureHash;
+var toFunctionSelector = (fn) => slice(toSignatureHash(fn), 0, 4);
+function getAbiItem(parameters) {
+  const { abi, args = [], name } = parameters;
+  const isSelector = isHex(name, { strict: false });
+  const abiItems = abi.filter((abiItem) => {
+    if (isSelector) {
+      if (abiItem.type === "function")
+        return toFunctionSelector(abiItem) === name;
+      if (abiItem.type === "event")
+        return toEventSelector(abiItem) === name;
+      return false;
+    }
+    return "name" in abiItem && abiItem.name === name;
+  });
+  if (abiItems.length === 0)
+    return;
+  if (abiItems.length === 1)
+    return abiItems[0];
+  let matchedAbiItem = undefined;
+  for (const abiItem of abiItems) {
+    if (!("inputs" in abiItem))
+      continue;
+    if (!args || args.length === 0) {
+      if (!abiItem.inputs || abiItem.inputs.length === 0)
+        return abiItem;
+      continue;
+    }
+    if (!abiItem.inputs)
+      continue;
+    if (abiItem.inputs.length === 0)
+      continue;
+    if (abiItem.inputs.length !== args.length)
+      continue;
+    const matched = args.every((arg, index) => {
+      const abiParameter = "inputs" in abiItem && abiItem.inputs[index];
+      if (!abiParameter)
+        return false;
+      return isArgOfType(arg, abiParameter);
+    });
+    if (matched) {
+      if (matchedAbiItem && "inputs" in matchedAbiItem && matchedAbiItem.inputs) {
+        const ambiguousTypes = getAmbiguousTypes(abiItem.inputs, matchedAbiItem.inputs, args);
+        if (ambiguousTypes)
+          throw new AbiItemAmbiguityError({
+            abiItem,
+            type: ambiguousTypes[0]
+          }, {
+            abiItem: matchedAbiItem,
+            type: ambiguousTypes[1]
+          });
+      }
+      matchedAbiItem = abiItem;
+    }
+  }
+  if (matchedAbiItem)
+    return matchedAbiItem;
+  return abiItems[0];
+}
+function isArgOfType(arg, abiParameter) {
+  const argType = typeof arg;
+  const abiParameterType = abiParameter.type;
+  switch (abiParameterType) {
+    case "address":
+      return isAddress(arg, { strict: false });
+    case "bool":
+      return argType === "boolean";
+    case "function":
+      return argType === "string";
+    case "string":
+      return argType === "string";
+    default: {
+      if (abiParameterType === "tuple" && "components" in abiParameter)
+        return Object.values(abiParameter.components).every((component, index) => {
+          return isArgOfType(Object.values(arg)[index], component);
+        });
+      if (/^u?int(8|16|24|32|40|48|56|64|72|80|88|96|104|112|120|128|136|144|152|160|168|176|184|192|200|208|216|224|232|240|248|256)?$/.test(abiParameterType))
+        return argType === "number" || argType === "bigint";
+      if (/^bytes([1-9]|1[0-9]|2[0-9]|3[0-2])?$/.test(abiParameterType))
+        return argType === "string" || arg instanceof Uint8Array;
+      if (/[a-z]+[1-9]{0,3}(\[[0-9]{0,}\])+$/.test(abiParameterType)) {
+        return Array.isArray(arg) && arg.every((x) => isArgOfType(x, {
+          ...abiParameter,
+          type: abiParameterType.replace(/(\[[0-9]{0,}\])$/, "")
+        }));
+      }
+      return false;
+    }
+  }
+}
+function getAmbiguousTypes(sourceParameters, targetParameters, args) {
+  for (const parameterIndex in sourceParameters) {
+    const sourceParameter = sourceParameters[parameterIndex];
+    const targetParameter = targetParameters[parameterIndex];
+    if (sourceParameter.type === "tuple" && targetParameter.type === "tuple" && "components" in sourceParameter && "components" in targetParameter)
+      return getAmbiguousTypes(sourceParameter.components, targetParameter.components, args[parameterIndex]);
+    const types2 = [sourceParameter.type, targetParameter.type];
+    const ambiguous = (() => {
+      if (types2.includes("address") && types2.includes("bytes20"))
+        return true;
+      if (types2.includes("address") && types2.includes("string"))
+        return isAddress(args[parameterIndex], { strict: false });
+      if (types2.includes("address") && types2.includes("bytes"))
+        return isAddress(args[parameterIndex], { strict: false });
+      return false;
+    })();
+    if (ambiguous)
+      return types2;
+  }
+  return;
+}
+var docsPath = "/docs/contract/decodeFunctionResult";
+function decodeFunctionResult(parameters) {
+  const { abi, args, functionName, data } = parameters;
+  let abiItem = abi[0];
+  if (functionName) {
+    const item = getAbiItem({ abi, args, name: functionName });
+    if (!item)
+      throw new AbiFunctionNotFoundError(functionName, { docsPath });
+    abiItem = item;
+  }
+  if (abiItem.type !== "function")
+    throw new AbiFunctionNotFoundError(undefined, { docsPath });
+  if (!abiItem.outputs)
+    throw new AbiFunctionOutputsNotFoundError(abiItem.name, { docsPath });
+  const values = decodeAbiParameters(abiItem.outputs, data);
+  if (values && values.length > 1)
+    return values;
+  if (values && values.length === 1)
+    return values[0];
+  return;
+}
+var docsPath2 = "/docs/contract/encodeFunctionData";
+function prepareEncodeFunctionData(parameters) {
+  const { abi, args, functionName } = parameters;
+  let abiItem = abi[0];
+  if (functionName) {
+    const item = getAbiItem({
+      abi,
+      args,
+      name: functionName
+    });
+    if (!item)
+      throw new AbiFunctionNotFoundError(functionName, { docsPath: docsPath2 });
+    abiItem = item;
+  }
+  if (abiItem.type !== "function")
+    throw new AbiFunctionNotFoundError(undefined, { docsPath: docsPath2 });
+  return {
+    abi: [abiItem],
+    functionName: toFunctionSelector(formatAbiItem2(abiItem))
+  };
+}
+function encodeFunctionData(parameters) {
+  const { args } = parameters;
+  const { abi, functionName } = (() => {
+    if (parameters.abi.length === 1 && parameters.functionName?.startsWith("0x"))
+      return parameters;
+    return prepareEncodeFunctionData(parameters);
+  })();
+  const abiItem = abi[0];
+  const signature = functionName;
+  const data = "inputs" in abiItem && abiItem.inputs ? encodeAbiParameters(abiItem.inputs, args ?? []) : undefined;
+  return concatHex([signature, data ?? "0x"]);
+}
 function publicKeyToAddress(publicKey) {
   const address = keccak256(`0x${publicKey.substring(4)}`).substring(26);
   return checksumAddress(`0x${address}`);
 }
-async function recoverPublicKey({ hash, signature }) {
-  const hashHex = isHex(hash) ? hash : toHex(hash);
+async function recoverPublicKey({ hash: hash2, signature }) {
+  const hashHex = isHex(hash2) ? hash2 : toHex(hash2);
   const { secp256k1: secp256k12 } = await Promise.resolve().then(() => (init_secp256k1(), exports_secp256k1));
   const signature_ = (() => {
     if (typeof signature === "object" && "r" in signature && "s" in signature) {
@@ -7217,11 +9067,8 @@ function toRecoveryBit(yParityOrV) {
     return 1;
   throw new Error("Invalid yParityOrV value");
 }
-async function recoverAddress({ hash, signature }) {
-  return publicKeyToAddress(await recoverPublicKey({ hash, signature }));
-}
-function concatHex(values) {
-  return `0x${values.reduce((acc, x) => acc + x.replace("0x", ""), "")}`;
+async function recoverAddress({ hash: hash2, signature }) {
+  return publicKeyToAddress(await recoverPublicKey({ hash: hash2, signature }));
 }
 function productionEnvironment() {
   return {
@@ -7768,6 +9615,324 @@ class Report {
     return this.report;
   }
 }
+var hexToBytes3 = (hexStr) => {
+  if (!hexStr.startsWith("0x")) {
+    throw new Error(`Invalid hex string: ${hexStr}`);
+  }
+  if (!/^0x[0-9a-fA-F]*$/.test(hexStr)) {
+    throw new Error(`Invalid hex string: ${hexStr}`);
+  }
+  if ((hexStr.length - 2) % 2 !== 0) {
+    throw new Error(`Hex string must have an even number of characters: ${hexStr}`);
+  }
+  const hex = hexStr.slice(2);
+  const bytes = new Uint8Array(hex.length / 2);
+  for (let i = 0;i < hex.length; i += 2) {
+    bytes[i / 2] = Number.parseInt(hex.slice(i, i + 2), 16);
+  }
+  return bytes;
+};
+var bytesToHex3 = (bytes) => {
+  return `0x${Array.from(bytes).map((b) => b.toString(16).padStart(2, "0")).join("")}`;
+};
+var hexToBase64 = (hex) => {
+  const cleanHex = hex.startsWith("0x") ? hex.slice(2) : hex;
+  if (cleanHex.length === 0) {
+    return "";
+  }
+  if (cleanHex.length % 2 !== 0) {
+    throw new Error(`Hex string must have an even number of characters: ${hex}`);
+  }
+  if (!/^[0-9a-fA-F]*$/.test(cleanHex)) {
+    throw new Error(`Invalid hex string: ${hex}`);
+  }
+  return Buffer.from(cleanHex, "hex").toString("base64");
+};
+function createWriteCreReportRequest(input) {
+  return {
+    receiver: hexToBytes3(input.receiver),
+    report: input.report,
+    gasConfig: input.gasConfig !== undefined ? fromJson(GasConfigSchema, input.gasConfig) : undefined,
+    $report: true
+  };
+}
+function x_generatedCodeOnly_unwrap_WriteCreReportRequest(input) {
+  return create(WriteReportRequestSchema, {
+    receiver: input.receiver,
+    report: input.report !== undefined ? input.report.x_generatedCodeOnly_unwrap() : undefined,
+    gasConfig: input.gasConfig
+  });
+}
+
+class ClientCapability {
+  ChainSelector;
+  static CAPABILITY_ID = "evm@1.0.0";
+  static CAPABILITY_NAME = "evm";
+  static CAPABILITY_VERSION = "1.0.0";
+  static SUPPORTED_CHAIN_SELECTORS = {
+    "apechain-testnet-curtis": 9900119385908781505n,
+    "arc-testnet": 3034092155422581607n,
+    "avalanche-mainnet": 6433500567565415381n,
+    "avalanche-testnet-fuji": 14767482510784806043n,
+    "binance_smart_chain-mainnet": 11344663589394136015n,
+    "binance_smart_chain-testnet": 13264668187771770619n,
+    "celo-mainnet": 1346049177634351622n,
+    "cronos-testnet": 2995292832068775165n,
+    "dtcc-testnet-andesite": 15513093881969820114n,
+    "ethereum-mainnet": 5009297550715157269n,
+    "ethereum-mainnet-arbitrum-1": 4949039107694359620n,
+    "ethereum-mainnet-base-1": 15971525489660198786n,
+    "ethereum-mainnet-ink-1": 3461204551265785888n,
+    "ethereum-mainnet-linea-1": 4627098889531055414n,
+    "ethereum-mainnet-mantle-1": 1556008542357238666n,
+    "ethereum-mainnet-optimism-1": 3734403246176062136n,
+    "ethereum-mainnet-scroll-1": 13204309965629103672n,
+    "ethereum-mainnet-worldchain-1": 2049429975587534727n,
+    "ethereum-mainnet-xlayer-1": 3016212468291539606n,
+    "ethereum-mainnet-zksync-1": 1562403441176082196n,
+    "ethereum-testnet-sepolia": 16015286601757825753n,
+    "ethereum-testnet-sepolia-arbitrum-1": 3478487238524512106n,
+    "ethereum-testnet-sepolia-base-1": 10344971235874465080n,
+    "ethereum-testnet-sepolia-linea-1": 5719461335882077547n,
+    "ethereum-testnet-sepolia-mantle-1": 8236463271206331221n,
+    "ethereum-testnet-sepolia-optimism-1": 5224473277236331295n,
+    "ethereum-testnet-sepolia-scroll-1": 2279865765895943307n,
+    "ethereum-testnet-sepolia-unichain-1": 14135854469784514356n,
+    "ethereum-testnet-sepolia-worldchain-1": 5299555114858065850n,
+    "ethereum-testnet-sepolia-zksync-1": 6898391096552792247n,
+    "gnosis_chain-mainnet": 465200170687744372n,
+    "gnosis_chain-testnet-chiado": 8871595565390010547n,
+    "hyperliquid-mainnet": 2442541497099098535n,
+    "hyperliquid-testnet": 4286062357653186312n,
+    "ink-testnet-sepolia": 9763904284804119144n,
+    "jovay-mainnet": 1523760397290643893n,
+    "jovay-testnet": 945045181441419236n,
+    "megaeth-mainnet": 6093540873831549674n,
+    "megaeth-testnet-2": 18241817625092392675n,
+    "pharos-atlantic-testnet": 16098325658947243212n,
+    "pharos-mainnet": 7801139999541420232n,
+    "plasma-mainnet": 9335212494177455608n,
+    "plasma-testnet": 3967220077692964309n,
+    "polygon-mainnet": 4051577828743386545n,
+    "polygon-testnet-amoy": 16281711391670634445n,
+    "private-testnet-andesite": 6915682381028791124n,
+    "sonic-mainnet": 1673871237479749969n,
+    "sonic-testnet": 1763698235108410440n,
+    "tac-testnet": 9488606126177218005n,
+    "xlayer-testnet": 10212741611335999305n
+  };
+  constructor(ChainSelector) {
+    this.ChainSelector = ChainSelector;
+  }
+  callContract(runtime, input) {
+    let payload;
+    if (input.$typeName) {
+      payload = input;
+    } else {
+      payload = fromJson(CallContractRequestSchema, input);
+    }
+    const capabilityId = `${ClientCapability.CAPABILITY_NAME}:ChainSelector:${this.ChainSelector}@${ClientCapability.CAPABILITY_VERSION}`;
+    const capabilityResponse = runtime.callCapability({
+      capabilityId,
+      method: "CallContract",
+      payload,
+      inputSchema: CallContractRequestSchema,
+      outputSchema: CallContractReplySchema
+    });
+    return {
+      result: () => {
+        const result = capabilityResponse.result();
+        return result;
+      }
+    };
+  }
+  filterLogs(runtime, input) {
+    let payload;
+    if (input.$typeName) {
+      payload = input;
+    } else {
+      payload = fromJson(FilterLogsRequestSchema, input);
+    }
+    const capabilityId = `${ClientCapability.CAPABILITY_NAME}:ChainSelector:${this.ChainSelector}@${ClientCapability.CAPABILITY_VERSION}`;
+    const capabilityResponse = runtime.callCapability({
+      capabilityId,
+      method: "FilterLogs",
+      payload,
+      inputSchema: FilterLogsRequestSchema,
+      outputSchema: FilterLogsReplySchema
+    });
+    return {
+      result: () => {
+        const result = capabilityResponse.result();
+        return result;
+      }
+    };
+  }
+  balanceAt(runtime, input) {
+    let payload;
+    if (input.$typeName) {
+      payload = input;
+    } else {
+      payload = fromJson(BalanceAtRequestSchema, input);
+    }
+    const capabilityId = `${ClientCapability.CAPABILITY_NAME}:ChainSelector:${this.ChainSelector}@${ClientCapability.CAPABILITY_VERSION}`;
+    const capabilityResponse = runtime.callCapability({
+      capabilityId,
+      method: "BalanceAt",
+      payload,
+      inputSchema: BalanceAtRequestSchema,
+      outputSchema: BalanceAtReplySchema
+    });
+    return {
+      result: () => {
+        const result = capabilityResponse.result();
+        return result;
+      }
+    };
+  }
+  estimateGas(runtime, input) {
+    let payload;
+    if (input.$typeName) {
+      payload = input;
+    } else {
+      payload = fromJson(EstimateGasRequestSchema, input);
+    }
+    const capabilityId = `${ClientCapability.CAPABILITY_NAME}:ChainSelector:${this.ChainSelector}@${ClientCapability.CAPABILITY_VERSION}`;
+    const capabilityResponse = runtime.callCapability({
+      capabilityId,
+      method: "EstimateGas",
+      payload,
+      inputSchema: EstimateGasRequestSchema,
+      outputSchema: EstimateGasReplySchema
+    });
+    return {
+      result: () => {
+        const result = capabilityResponse.result();
+        return result;
+      }
+    };
+  }
+  getTransactionByHash(runtime, input) {
+    let payload;
+    if (input.$typeName) {
+      payload = input;
+    } else {
+      payload = fromJson(GetTransactionByHashRequestSchema, input);
+    }
+    const capabilityId = `${ClientCapability.CAPABILITY_NAME}:ChainSelector:${this.ChainSelector}@${ClientCapability.CAPABILITY_VERSION}`;
+    const capabilityResponse = runtime.callCapability({
+      capabilityId,
+      method: "GetTransactionByHash",
+      payload,
+      inputSchema: GetTransactionByHashRequestSchema,
+      outputSchema: GetTransactionByHashReplySchema
+    });
+    return {
+      result: () => {
+        const result = capabilityResponse.result();
+        return result;
+      }
+    };
+  }
+  getTransactionReceipt(runtime, input) {
+    let payload;
+    if (input.$typeName) {
+      payload = input;
+    } else {
+      payload = fromJson(GetTransactionReceiptRequestSchema, input);
+    }
+    const capabilityId = `${ClientCapability.CAPABILITY_NAME}:ChainSelector:${this.ChainSelector}@${ClientCapability.CAPABILITY_VERSION}`;
+    const capabilityResponse = runtime.callCapability({
+      capabilityId,
+      method: "GetTransactionReceipt",
+      payload,
+      inputSchema: GetTransactionReceiptRequestSchema,
+      outputSchema: GetTransactionReceiptReplySchema
+    });
+    return {
+      result: () => {
+        const result = capabilityResponse.result();
+        return result;
+      }
+    };
+  }
+  headerByNumber(runtime, input) {
+    let payload;
+    if (input.$typeName) {
+      payload = input;
+    } else {
+      payload = fromJson(HeaderByNumberRequestSchema, input);
+    }
+    const capabilityId = `${ClientCapability.CAPABILITY_NAME}:ChainSelector:${this.ChainSelector}@${ClientCapability.CAPABILITY_VERSION}`;
+    const capabilityResponse = runtime.callCapability({
+      capabilityId,
+      method: "HeaderByNumber",
+      payload,
+      inputSchema: HeaderByNumberRequestSchema,
+      outputSchema: HeaderByNumberReplySchema
+    });
+    return {
+      result: () => {
+        const result = capabilityResponse.result();
+        return result;
+      }
+    };
+  }
+  logTrigger(config) {
+    const capabilityId = `${ClientCapability.CAPABILITY_NAME}:ChainSelector:${this.ChainSelector}@${ClientCapability.CAPABILITY_VERSION}`;
+    return new ClientLogTrigger(config, capabilityId, "LogTrigger", this.ChainSelector);
+  }
+  writeReport(runtime, input) {
+    let payload;
+    if (input.$report) {
+      payload = x_generatedCodeOnly_unwrap_WriteCreReportRequest(input);
+    } else {
+      payload = x_generatedCodeOnly_unwrap_WriteCreReportRequest(createWriteCreReportRequest(input));
+    }
+    const capabilityId = `${ClientCapability.CAPABILITY_NAME}:ChainSelector:${this.ChainSelector}@${ClientCapability.CAPABILITY_VERSION}`;
+    const capabilityResponse = runtime.callCapability({
+      capabilityId,
+      method: "WriteReport",
+      payload,
+      inputSchema: WriteReportRequestSchema,
+      outputSchema: WriteReportReplySchema
+    });
+    return {
+      result: () => {
+        const result = capabilityResponse.result();
+        return result;
+      }
+    };
+  }
+}
+
+class ClientLogTrigger {
+  _capabilityId;
+  _method;
+  ChainSelector;
+  config;
+  constructor(config, _capabilityId, _method, ChainSelector) {
+    this._capabilityId = _capabilityId;
+    this._method = _method;
+    this.ChainSelector = ChainSelector;
+    this.config = config.$typeName ? config : fromJson(FilterLogTriggerRequestSchema, config);
+  }
+  capabilityId() {
+    return this._capabilityId;
+  }
+  method() {
+    return this._method;
+  }
+  outputSchema() {
+    return LogSchema;
+  }
+  configAsAny() {
+    return anyPack(FilterLogTriggerRequestSchema, this.config);
+  }
+  adapt(rawOutput) {
+    return rawOutput;
+  }
+}
 var TxStatus2;
 (function(TxStatus3) {
   TxStatus3[TxStatus3["FATAL"] = 0] = "FATAL";
@@ -7795,7 +9960,7 @@ class SendRequester {
   }
 }
 
-class ClientCapability {
+class ClientCapability2 {
   static CAPABILITY_ID = "http-actions@1.0.0-alpha";
   static CAPABILITY_NAME = "http-actions";
   static CAPABILITY_VERSION = "1.0.0-alpha";
@@ -7814,7 +9979,7 @@ class ClientCapability {
     } else {
       payload = fromJson(RequestSchema, input);
     }
-    const capabilityId = ClientCapability.CAPABILITY_ID;
+    const capabilityId = ClientCapability2.CAPABILITY_ID;
     const capabilityResponse = runtime.callCapability({
       capabilityId,
       method: "SendRequest",
@@ -9346,9 +11511,9 @@ Url.prototype.parse = function(url, parseQueryString, slashesDenoteHost) {
         esc = escape(ae);
       rest = rest.split(ae).join(esc);
     }
-  var hash = rest.indexOf("#");
-  if (hash !== -1)
-    this.hash = rest.substr(hash), rest = rest.slice(0, hash);
+  var hash2 = rest.indexOf("#");
+  if (hash2 !== -1)
+    this.hash = rest.substr(hash2), rest = rest.slice(0, hash2);
   var qm = rest.indexOf("?");
   if (qm !== -1) {
     if (this.search = rest.substr(qm), this.query = rest.substr(qm + 1), parseQueryString)
@@ -9370,7 +11535,7 @@ Url.prototype.format = function() {
   var auth = this.auth || "";
   if (auth)
     auth = encodeURIComponent(auth), auth = auth.replace(/%3A/i, ":"), auth += "@";
-  var protocol = this.protocol || "", pathname = this.pathname || "", hash = this.hash || "", host = false, query = "";
+  var protocol = this.protocol || "", pathname = this.pathname || "", hash2 = this.hash || "", host = false, query = "";
   if (this.host)
     host = auth + this.host;
   else if (this.hostname) {
@@ -9387,13 +11552,13 @@ Url.prototype.format = function() {
       pathname = "/" + pathname;
   } else if (!host)
     host = "";
-  if (hash && hash.charAt(0) !== "#")
-    hash = "#" + hash;
+  if (hash2 && hash2.charAt(0) !== "#")
+    hash2 = "#" + hash2;
   if (search && search.charAt(0) !== "?")
     search = "?" + search;
   return pathname = pathname.replace(/[?#]/g, function(match) {
     return encodeURIComponent(match);
-  }), search = search.replace("#", "%23"), protocol + host + pathname + search + hash;
+  }), search = search.replace("#", "%23"), protocol + host + pathname + search + hash2;
 };
 Url.prototype.resolve = function(relative) {
   return this.resolveObject(urlParse(relative, false, true)).format();
@@ -9562,6 +11727,20 @@ var LATEST_BLOCK_NUMBER = {
   absVal: Buffer.from([2]).toString("base64"),
   sign: "-1"
 };
+var encodeCallMsg = (payload) => {
+  const encodeField = (fieldName, value) => {
+    try {
+      return hexToBase64(value);
+    } catch (e) {
+      throw new Error(`Invalid hex in '${fieldName}' field of CallMsg: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  };
+  return {
+    from: encodeField("from", payload.from),
+    to: encodeField("to", payload.to),
+    data: encodeField("data", payload.data)
+  };
+};
 function sendReport(runtime, report, fn) {
   const rawReport = report.x_generatedCodeOnly_unwrap();
   const request = fn(rawReport);
@@ -9572,7 +11751,7 @@ function sendRequesterSendReport(report, fn) {
   const request = fn(rawReport);
   return this.sendRequest(request);
 }
-ClientCapability.prototype.sendReport = sendReport;
+ClientCapability2.prototype.sendReport = sendReport;
 SendRequester.prototype.sendReport = sendRequesterSendReport;
 var network = {
   chainId: "1",
@@ -13722,6 +15901,7 @@ var defaultLookup = new NetworkLookup({
   testnetBySelector,
   testnetBySelectorByFamily
 });
+var getNetwork = (options) => defaultLookup.find(options);
 
 class Int64 {
   static INT64_MIN = -(2n ** 63n);
@@ -15036,11 +17216,11 @@ function datetimeRegex(args) {
   regex = `${regex}(${opts.join("|")})`;
   return new RegExp(`^${regex}$`);
 }
-function isValidIP(ip, version2) {
-  if ((version2 === "v4" || !version2) && ipv4Regex.test(ip)) {
+function isValidIP(ip, version3) {
+  if ((version3 === "v4" || !version3) && ipv4Regex.test(ip)) {
     return true;
   }
-  if ((version2 === "v6" || !version2) && ipv6Regex.test(ip)) {
+  if ((version3 === "v6" || !version3) && ipv6Regex.test(ip)) {
     return true;
   }
   return false;
@@ -15067,11 +17247,11 @@ function isValidJWT(jwt, alg) {
     return false;
   }
 }
-function isValidCidr(ip, version2) {
-  if ((version2 === "v4" || !version2) && ipv4CidrRegex.test(ip)) {
+function isValidCidr(ip, version3) {
+  if ((version3 === "v4" || !version3) && ipv4CidrRegex.test(ip)) {
     return true;
   }
-  if ((version2 === "v6" || !version2) && ipv6CidrRegex.test(ip)) {
+  if ((version3 === "v6" || !version3) && ipv6CidrRegex.test(ip)) {
     return true;
   }
   return false;
@@ -18614,11 +20794,72 @@ var sendErrorResponse = (error) => {
   }
   hostBindings.sendResponse(payload);
 };
+var aggregatorAbi = parseAbi([
+  "function latestRoundData() view returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)"
+]);
 var onCronTrigger = (runtime2) => {
-  runtime2.log("Hello world! Workflow triggered.");
-  return "Hello world!";
+  const evmConfig = runtime2.config.evms[0];
+  const {
+    token,
+    feedAddress,
+    contractAddress,
+    chainName
+  } = evmConfig;
+  runtime2.log(`[price-snapshot] token=${token} feed=${feedAddress}`);
+  const network286 = getNetwork({
+    chainFamily: "evm",
+    chainSelectorName: chainName
+  });
+  if (!network286) {
+    throw new Error(`Network not found: ${chainName}`);
+  }
+  const evmClient = new ClientCapability(network286.chainSelector.selector);
+  const readCallData = encodeFunctionData({
+    abi: aggregatorAbi,
+    functionName: "latestRoundData",
+    args: []
+  });
+  const contractCall = evmClient.callContract(runtime2, {
+    call: encodeCallMsg({
+      from: zeroAddress,
+      to: feedAddress,
+      data: readCallData
+    }),
+    blockNumber: LAST_FINALIZED_BLOCK_NUMBER
+  }).result();
+  const decoded = decodeFunctionResult({
+    abi: aggregatorAbi,
+    functionName: "latestRoundData",
+    data: bytesToHex3(contractCall.data)
+  });
+  const [, answer, , updatedAt] = decoded;
+  if (answer <= 0n) {
+    throw new Error(`Bad price from feed: ${answer}`);
+  }
+  const priceUsd = (Number(answer) / 1e8).toFixed(2);
+  runtime2.log(`[price-snapshot] ${token} = $${priceUsd} updatedAt=${updatedAt}`);
+  const encoded = encodeAbiParameters(parseAbiParameters("string,uint256,uint256,uint256"), [token, answer, updatedAt, updatedAt]);
+  const report2 = runtime2.report({
+    encodedPayload: hexToBase64(encoded),
+    encoderName: "evm",
+    signingAlgo: "ecdsa",
+    hashingAlgo: "keccak256"
+  }).result();
+  const writeReply = evmClient.writeReport(runtime2, {
+    receiver: contractAddress,
+    report: report2
+  }).result();
+  runtime2.log(`[price-snapshot] txStatus=${writeReply.txStatus} txHash=${writeReply.txHash ?? "n/a"}`);
+  return JSON.stringify({
+    token,
+    priceUsd,
+    priceRaw: answer.toString(),
+    updatedAt: updatedAt.toString(),
+    txStatus: writeReply.txStatus,
+    txHash: writeReply.txHash
+  });
 };
-var initWorkflow = (config) => {
+var initWorkflow = async (config) => {
   const cron = new CronCapability;
   return [
     handler(cron.trigger({ schedule: config.schedule }), onCronTrigger)
@@ -18630,7 +20871,5 @@ async function main() {
 }
 main().catch(sendErrorResponse);
 export {
-  onCronTrigger,
-  main,
-  initWorkflow
+  main
 };
