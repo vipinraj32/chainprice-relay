@@ -32,7 +32,6 @@ HTTP POST /snapshot
 Chainlink ETH/USD Feed    PriceSnapshot.sol (Sepolia)
 0x694AA1769357215DE4FAC   Your deployed contract
 ```
-
 ---
 
 ## Supported Tokens
@@ -45,20 +44,6 @@ Chainlink ETH/USD Feed    PriceSnapshot.sol (Sepolia)
 | USDC  | `0xA2F78ab2355fe2f984D808B5CeE7FD0A93D5270E` |
 
 ---
-
-## Prerequisites
-
-| Requirement | Version |
-|-------------|---------|
-| Node.js     | ≥ 18    |
-| `cre` CLI   | latest  |
-| Sepolia ETH | ~0.05 ETH for deploy + gas |
-
-Install the CRE CLI:
-
-```bash
-npm install -g @chainlink/cre-cli
-```
 
 ---
 
